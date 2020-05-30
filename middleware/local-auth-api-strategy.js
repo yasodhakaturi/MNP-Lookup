@@ -1,12 +1,13 @@
-var passport = require('passport'),
-  LocalAPIKeyStrategyStrategy = require('passport-local').Strategy;
+var passport = require('passport')
+const HeaderAPIKeyStrategy = require('passport-headerapikey').HeaderAPIKeyStrategy
 
-passport.use(new LocalAPIKeyStrategy(
-  function(username, password, done) {
-    User.findOne({ username: username }, function (err, user) {
+passport.use(new HeaderAPIKeyStrategy(
+  { header: 'Authorization', prefix: 'Api-Key ' },
+  false,
+  function(apikey, done) {
+    User.findOne({ apikey: apikey }, function (err, user) {
       if (err) { return done(err); }
       if (!user) { return done(null, false); }
-      if (!user.verifyPassword(password)) { return done(null, false); }
       return done(null, user);
     });
   }

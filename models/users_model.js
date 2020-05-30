@@ -7,7 +7,7 @@ const userSchema = new Schema({
   email: String,
   password: String,
   permissionLevel: Number,
-  authKey:String
+  apikey:String
 });
 
 userSchema.virtual('id').get(function () {
