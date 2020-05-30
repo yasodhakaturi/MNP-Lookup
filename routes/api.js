@@ -14,10 +14,19 @@ router.get('/authenticate', function(req, res, next) {
   res.send('This service validates the api-key in the headers');
 });
 
-/* GET api/authenticate page. */
-router.post('/MNP-Lookup', function(req, res, next) {
-  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
-  res.send('This service validates the api-key in the headers and creates a MNP-lookup for a request.');
-});
+
+app.post('/MNP-Lookup',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/unauthorized' }),
+  function(req, res) {
+    res.json({ message: "Authenticated" })
+  });
+
+
+//
+// /* GET api/authenticate page. */
+// router.post('/MNP-Lookup', function(req, res, next) {
+//   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+//   res.send('This service validates the api-key in the headers and creates a MNP-lookup for a request.');
+// });
 
 module.exports = router;
