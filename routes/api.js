@@ -15,7 +15,7 @@ router.get('/authenticate', function(req, res, next) {
 });
 
 
-app.post('/MNP-Lookup',
+router.post('/MNP-Lookup',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/unauthorized' }),
   function(req, res) {
     res.json({ message: "Authenticated" })
