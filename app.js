@@ -4,13 +4,15 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var sassMiddleware = require('node-sass-middleware');
+const _ = require('lodash')
 var ENV = require('./common/config');
+const cron = require("node-cron");
 
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var apiRouter = require('./routes/api');
-
+const jobs=require('./middleware/jobs/jobs');
 var app = express();
 
 // view engine setup
@@ -65,5 +67,23 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+
+
+// schedule tasks to be run on the server
+cron.schedule("* * * * *", function() {
+  console.log("---------------------");
+  console.log("Running Cron Job");
+  // fs.unlink("./error.log", err => {
+  //   if (err) throw err;
+  //   console.log("Error file succesfully deleted");
+  // });
+  jobs.requestedDataToQueue('new_request').then((result) =>{
+    console.log("processed queue:", _.map(result, 'mobile_number'))
+  }).catch((err)=>{
+    console.log(err)
+  });
+});
+
 
 module.exports = app;

@@ -5,6 +5,7 @@ const uuidAPIKey = require('uuid-apikey');
 const UserModel = require('../models/users_model');
 const RequestDataModel = require('../models/requested_data_model');
 let _ = require('lodash');
+const jobs=require('../middleware/jobs/jobs');
 
 // var ValidationMiddleware = require('../middleware/verify.user.middleware');
 
@@ -60,6 +61,15 @@ const requestDataValidator = function (options) {
 /* GET api page. */
 router.get('/', function(req, res, next) {
   res.send('Your are accessing MNP-lookup services');
+});
+
+/* GET api page. */
+router.get('/test', function(req, res, next) {
+  jobs.requestedDataToQueue('new_request').then((result) =>{
+    res.json(result);
+  }).catch((err)=>{
+    res.json(err);
+  });
 });
 
 /* POST api/authenticate page. */
