@@ -1,14 +1,13 @@
 var express = require('express');
-var router = express.Router();
 const crypto = require('crypto');
 const uuidAPIKey = require('uuid-apikey');
 const UserModel = require('../models/users_model');
 const RequestDataModel = require('../models/requested_data_model');
-let _ = require('lodash');
+const _ = require('lodash');
 const jobs=require('../middleware/jobs/jobs');
+const rateLimit = require("express-rate-limit");
 
-// var ValidationMiddleware = require('../middleware/verify.user.middleware');
-
+var router = express.Router();
 
 var passport = require('passport'),
   HeaderAPIKeyStrategy = require('passport-headerapikey').HeaderAPIKeyStrategy;
@@ -56,7 +55,19 @@ const requestDataValidator = function (options) {
 
     next()
   }
-}
+};
+
+//TODO: skip the count if the requested mobile number data is already exists.
+const createAccountLimiter = rateLimit({
+  windowMs: .5 * 60 * 1000, // 1 min window
+  max: 3, // start 3 blocking after  requests
+  message: {error:"Reached the limit on number concurrent requests per user, please try again after 30 seconds, or use Async Service without a limit on concurrent requests."},
+  keyGenerator: function (req ) {
+    return req.user._id;
+  },
+  skipFailedRequests:true,
+});
+
 
 /* GET api page. */
 router.get('/', function(req, res, next) {
@@ -109,6 +120,14 @@ router.post('/MNP-Lookup',
           }
         });
     }
+  });
+
+router.get('/MNP-Lookup/:mobile_number',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  createAccountLimiter,
+  function(req, res){
+    res.status(200);
+    res.json({status:"Processing", response: pendingReqCount + 1, mobile_nmber: req.params.mobile_number});
   });
 
 /* POST api/authenticate page. */
