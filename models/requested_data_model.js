@@ -64,3 +64,15 @@ exports.createRequest = (req) => {
   // const user = new User(userData);
   // return user.save();
 };
+
+exports.findByStatus = (statusmode) => {
+  return new Promise((resolve, reject) => {
+    RequestData.find({ status: statusmode }, function (err, result) {
+      if (err) reject(err);
+      //result = result.toJSON();
+      //delete result._id;
+      //delete result.__v;
+      resolve(result);
+    });
+  })
+};
