@@ -3,6 +3,7 @@ var router = express.Router();
 const crypto = require('crypto');
 const uuidAPIKey = require('uuid-apikey');
 const UserModel = require('../models/users_model');
+let _ = require('lodash');
 
 // var ValidationMiddleware = require('../middleware/verify.user.middleware');
 
@@ -22,6 +23,36 @@ passport.use(new HeaderAPIKeyStrategy(
   }
 
 ));
+
+const requestDataValidator = function (options) {
+  return function (req, res, next) {
+    // Implement the middleware function based on the options objectr
+    req.processedData = {valid:[], invalid:[]}
+
+    if(!req.body.numbers || req.body.numbers.length == 0){
+      // no numbers requested
+      req.processedData.error = {"statusCode": 422, error: "Wrong data: No numbers found"}
+    }else if(!_.isArray(req.body.numbers)){
+      req.processedData.error = {"statusCode": 422, error: "Wrong data: Numbers should be in a array"}
+    }else{
+      _.each(req.body.numbers, (number)=>{
+        if((_.startsWith(number, '971') && number.length == 12)){
+          req.processedData.valid.push(number);
+        }else{
+          req.processedData.invalid.push(number);
+        }
+      })
+      if(req.processedData.valid && req.processedData.valid.length == 0){
+        req.processedData.error = {"statusCode": 422, error: "Wrong data: No valid numbers found"}
+      }else if(req.processedData.valid && req.processedData.valid.length > 1 && !req.body.hook_url){
+        //when no web hook found in request
+        req.processedData.error = {"statusCode": 422, error: "Wrong data: No hook URL found"}
+      }
+    }
+
+    next()
+  }
+}
 
 /* GET api page. */
 router.get('/', function(req, res, next) {
@@ -45,8 +76,15 @@ router.get('/unauthorized', function(req, res, next) {
 
 router.post('/MNP-Lookup',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  requestDataValidator(),
   function(req, res) {
-    res.json({ message: "Authenticated" })
+    console.log(req.processedData);
+    if(req.processedData.error){
+      res.status(req.processedData.error.statusCode);
+      res.json({status:"error", message: req.processedData.error.error});
+    }else {
+      res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
+    }
   });
 
 /* POST api/authenticate page. */
@@ -64,16 +102,16 @@ router.post('/user',
     let createdBy = req.user._id;
     if(req.user.permissionLevel == 100){
       res.status(401);
-      res.json({status:"error",id: "UnAuthorized"});
+      res.json({status:"error",message: "UnAuthorized"});
     }else if(!email){
       res.status(422);
-      res.json({status:"error",id: "Email Required"});
+      res.json({status:"error",message: "Email Required"});
     }else if(!password){
       res.status(422);
-      res.json({status:"error",id: "Password Required"});
+      res.json({status:"error",message: "Password Required"});
     }else if(!firstName){
       res.status(422);
-      res.json({status:"error",id: "First Name Required"});
+      res.json({status:"error",message: "First Name Required"});
     }else{
       let salt = crypto.randomBytes(16).toString('base64');
       let hash = crypto.createHmac('sha512', salt).update(req.body.password || "sample").digest("base64");
