@@ -13,19 +13,19 @@ const responsedataSchema = new Schema({
   },
   batch_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'RequestData'
+    ref: 'Requests'
   },
 
   status: {
     type: String,
     enum: ['new_request', 'inprogress', 'completed', 'submitted']
   },
-  submitte_date: {
+  submitted_date: {
     type: Date
 
   }
 });
 
-const ResponseData = mongoose.model('ResponseData', responsedataSchema);
+const ResponseData = mongoose.model('Responses', responsedataSchema);
 
 exports.model = ResponseData;

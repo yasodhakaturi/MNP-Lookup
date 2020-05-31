@@ -3,6 +3,7 @@ var router = express.Router();
 const crypto = require('crypto');
 const uuidAPIKey = require('uuid-apikey');
 const UserModel = require('../models/users_model');
+const RequestDataModel = require('../models/requested_data_model');
 let _ = require('lodash');
 
 // var ValidationMiddleware = require('../middleware/verify.user.middleware');
@@ -34,6 +35,8 @@ const requestDataValidator = function (options) {
       req.processedData.error = {"statusCode": 422, error: "Wrong data: No numbers found"}
     }else if(!_.isArray(req.body.numbers)){
       req.processedData.error = {"statusCode": 422, error: "Wrong data: Numbers should be in a array"}
+    }else if(!req.body.hook_url){
+      req.processedData.error = {"statusCode": 422, error: "Wrong data: No web hook URL found"}
     }else{
       _.each(req.body.numbers, (number)=>{
         if((_.startsWith(number, '971') && number.length == 12)){
@@ -44,9 +47,9 @@ const requestDataValidator = function (options) {
       })
       if(req.processedData.valid && req.processedData.valid.length == 0){
         req.processedData.error = {"statusCode": 422, error: "Wrong data: No valid numbers found"}
-      }else if(req.processedData.valid && req.processedData.valid.length > 1 && !req.body.hook_url){
-        //when no web hook found in request
-        req.processedData.error = {"statusCode": 422, error: "Wrong data: No hook URL found"}
+      // }else if(req.processedData.valid && req.processedData.valid.length > 1 && !req.body.hook_url){
+      //   //when no web hook found in request
+      //   req.processedData.error = {"statusCode": 422, error: "Wrong data: No hook URL found"}
       }
     }
 
@@ -78,12 +81,23 @@ router.post('/MNP-Lookup',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   requestDataValidator(),
   function(req, res) {
-    console.log(req.processedData);
+
     if(req.processedData.error){
       res.status(req.processedData.error.statusCode);
       res.json({status:"error", message: req.processedData.error.error});
     }else {
-      res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
+      // res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
+      // RequestDataModel
+      RequestDataModel.createRequest(req)
+        .then((result) => {
+          if(result.errorMessage){
+            res.status(result.statusCode)
+            res.json({ error: result.errorMessage })
+          }else{
+            res.status(200);
+            res.json({status:"Processing",batch_id: result._id, valid_numbers: result.requested_data.split(','), invalid_numbers: req.processedData.invalid});
+          }
+        });
     }
   });
 

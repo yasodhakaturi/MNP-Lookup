@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const processeddataSchema = new Schema({
   batch_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'RequestData'
+    ref: 'Requests'
   },
   mobile_number: {
     type: String,
@@ -22,6 +22,6 @@ const processeddataSchema = new Schema({
   }
 });
 
-const RequestQueue = mongoose.model('RequestQueue', processeddataSchema);
+const RequestQueue = mongoose.model('RequestQueues', processeddataSchema);
 
 exports.model = RequestQueue;
