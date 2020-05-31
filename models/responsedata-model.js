@@ -2,26 +2,30 @@ const mongoose = require('../common/services/mongoose.service').mongoose;
 const Schema = mongoose.Schema;
 
 const responsedataSchema = new Schema({
-    mobilenumber:{
-        type:Number,
-        required: [true, 'mobilenumber can not be empty!'],
-    },
-    responsedata:{
-type:String,
-required:[true,'response data cant be empty!']
+  mobile_number: {
+    type: Number,
+    required: [true, 'mobilenumber can not be empty!'],
+  },
+  response_data: {
+    type: String,
+    required: [true, 'response data cant be empty!']
 
-    },
-    batchid:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'requesteddata'
-    },
-    
-    status:{
-        type:String,
-        enum:['newrequest','inprogress','completed','submitted']
-    },
-    submittedate:{
-        type:Date
-        
-    }
-    });
+  },
+  batch_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RequestData'
+  },
+
+  status: {
+    type: String,
+    enum: ['new_request', 'inprogress', 'completed', 'submitted']
+  },
+  submitte_date: {
+    type: Date
+
+  }
+});
+
+const ResponseData = mongoose.model('ResponseData', responsedataSchema);
+
+exports.model = ResponseData;
