@@ -2,22 +2,26 @@ const mongoose = require('../common/services/mongoose.service').mongoose;
 const Schema = mongoose.Schema;
 
 const processeddataSchema = new Schema({
-    batchid:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'requesteddata'
-    },
-    mobilenumber:{
-        type:number,
-        required: [true, 'mobilenumber can not be empty!']
-    },
-    webhook:{
-        type:String
-    },
-    status:{
-        type:String,
-        enum:['newrequest','inprogress','completed','submitted']
-    },
-    jobid:{
-    type:Number
-}
+  batch_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RequestData'
+  },
+  mobile_number: {
+    type: String,
+    required: [true, 'mobile number can not be empty!']
+  },
+  web_hook: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ['new_request', 'inprogress', 'completed', 'submitted']
+  },
+  job_id: {
+    type: Number
+  }
 });
+
+const RequestQueue = mongoose.model('RequestQueue', processeddataSchema);
+
+exports.model = RequestQueue;

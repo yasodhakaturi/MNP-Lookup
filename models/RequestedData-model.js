@@ -2,17 +2,21 @@ const mongoose = require('../common/services/mongoose.service').mongoose;
 const Schema = mongoose.Schema;
 
 const requesteddataSchema = new Schema({
-  requesteddata: {
+  requested_data: {
     type: String,
-    required: [true, 'RequestedDate can not be null!']
-},
-    requestedBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'users'
- },
-  status:{
-        type:string,
-    enum:['newrequest','inprogress','completed','submitted']
-   
-    }
+    required: [true, 'Requested Date can not be null!']
+  },
+  requested_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'users'
+  },
+  status: {
+    type: string,
+    enum: ['new_request', 'inprogress', 'completed', 'submitted']
+
+  }
 });
+
+const RequestData = mongoose.model('RequestData', requesteddataSchema);
+
+exports.model = RequestData;
