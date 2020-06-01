@@ -10,5 +10,6 @@ module.exports = {
   INFOBIP_API_SYNC_URL: process.env.INFOBIP_API_SYNC_URL || '',
   INFOBIP_API_KEY: process.env.INFOBIP_API_KEY || '',
   WEB_HOOK_PATH: process.env.OUR_WEB_HOOK_PATH || '',
-  FETCH_SIZE : process.env.FETCH_SIZE || 10
+  FETCH_SIZE : process.env.FETCH_SIZE || 10,
+  DB_PATH: process.env.DB_PATH
 };
