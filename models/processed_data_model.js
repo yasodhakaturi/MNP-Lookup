@@ -29,7 +29,7 @@ exports.model = RequestQueue;
 
 exports.findByStatusWithLimit = (statusmode, limit=10) => {
   return new Promise((resolve, reject) => {
-    RequestQueue.find({ status: statusmode }).limit(limit).exec( function (err, results) {
+    RequestQueue.find({ status: statusmode }).limit(parseInt(limit)).exec( function (err, results) {
       if (err) reject(err);
         resolve(results);
     });
