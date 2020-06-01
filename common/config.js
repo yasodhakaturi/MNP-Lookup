@@ -11,5 +11,8 @@ module.exports = {
   INFOBIP_API_KEY: process.env.INFOBIP_API_KEY || '',
   WEB_HOOK_PATH: process.env.OUR_WEB_HOOK_PATH || '',
   FETCH_SIZE : process.env.FETCH_SIZE || 10,
-  DB_PATH: process.env.DB_PATH
+  DB_PATH: process.env.DB_PATH,
+  SSL_PRIVATE_KEY: process.env.SSL_PRIVATE_KEY || '',
+  SSL_PRIVATE_CRT: process.env.SSL_PRIVATE_CRT || '',
+  SSL_INTERMEDIATE_CRT: process.env.SSL_INTERMEDIATE_CRT || '',
 };

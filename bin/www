@@ -8,6 +8,8 @@ var app = require('../app');
 var ENV = require('../common/config');
 var debug = require('debug')('mnp-lookup:server');
 var http = require('http');
+const https = require('https');
+const fs = require('fs');
 
 
 /**
@@ -21,7 +23,26 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+
+if(ENV.NODE_ENV === 'production') {
+  // We are running in production mode
+  var key = ENV.SSL_PRIVATE_KEY ? fs.readFileSync(ENV.SSL_PRIVATE_KEY) : undefined; //'encryption/private.key'
+  var cert = ENV.SSL_PRIVATE_CRT ? fs.readFileSync( ENV.SSL_PRIVATE_CRT ) : undefined; //'encryption/primary.crt'
+  var ca = ENV.SSL_INTERMEDIATE_CRT ? fs.readFileSync( ENV.SSL_INTERMEDIATE_CRT ): undefined; //'encryption/intermediate.crt'
+
+  var options = {
+    key: key,
+    cert: cert,
+    ca: ca
+  };
+
+  var server = https.createServer(options, app)
+
+} else {
+  // We are running in development mode
+  var server = http.createServer(app);
+}
+
 
 /**
  * Listen on provided port, on all network interfaces.

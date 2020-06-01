@@ -7,6 +7,7 @@ var sassMiddleware = require('node-sass-middleware');
 const _ = require('lodash')
 var ENV = require('./common/config');
 const cron = require("node-cron");
+var forceSsl = require('express-force-ssl');
 
 
 var indexRouter = require('./routes/index');
@@ -20,6 +21,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(logger('dev'));
+
+if(ENV.NODE_ENV === 'production') {
+  app.use(forceSsl);
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
