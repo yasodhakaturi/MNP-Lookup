@@ -73,7 +73,7 @@ app.use(function(err, req, res, next) {
 // schedule tasks to be run on the server
 cron.schedule("* * * * *", function() {
   console.log("---------------------");
-  console.log("Running Cron Job");
+  console.log("Running Process Queue Cron Job");
   // fs.unlink("./error.log", err => {
   //   if (err) throw err;
   //   console.log("Error file succesfully deleted");
@@ -83,6 +83,26 @@ cron.schedule("* * * * *", function() {
   }).catch((err)=>{
     console.log(err)
   });
+});
+
+
+// schedule tasks to be run on the server
+cron.schedule("* * * * *", function() {
+  console.log("---------------------");
+  console.log("Running Fetcher Cron Job");
+  // fs.unlink("./error.log", err => {
+  //   if (err) throw err;
+  //   console.log("Error file succesfully deleted");
+  // });
+
+
+  setTimeout(function() {
+    jobs.requestedQueueToFetcher('new_request', ENV.FETCH_SIZE || 10).then((result) =>{
+      console.log("fetch requested:", _.map(result, 'mobile_number'))
+    }).catch((err)=>{
+      console.log(err)
+    });
+  }, 10000);
 });
 
 

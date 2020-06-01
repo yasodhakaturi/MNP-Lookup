@@ -1,11 +1,16 @@
 var express = require('express');
 const crypto = require('crypto');
 const uuidAPIKey = require('uuid-apikey');
+const _ = require('lodash');
+const rateLimit = require("express-rate-limit");
+
 const UserModel = require('../models/users_model');
 const RequestDataModel = require('../models/requested_data_model');
-const _ = require('lodash');
-const jobs=require('../middleware/jobs/jobs');
-const rateLimit = require("express-rate-limit");
+const MnpRequestModel = require('../models/mnp_requests_model');
+
+const jobs= require('../middleware/jobs/jobs');
+const mnpResponseMapping = require('../common/response.mapping');
+const dispatcher = require('../common/response.dispatcher');
 
 var router = express.Router();
 
@@ -57,9 +62,20 @@ const requestDataValidator = function (options) {
   }
 };
 
+const jobIdIdentifier = function(){
+  return function (req, res, next){
+    MnpRequestModel.model.findOne({ _id: req.params.job_id }, function (err, job) {
+      if (err) { return next(err); }
+      if (!job) { return next(null, false); };
+      req.job = job;
+      return next(null, job, { scope: 'all' });
+    })
+  }
+}
+
 //TODO: skip the count if the requested mobile number data is already exists.
-const createAccountLimiter = rateLimit({
-  windowMs: .5 * 60 * 1000, // 1 min window
+const requestLimiter = rateLimit({
+  windowMs: .5 * 60 * 1000, // 30 sec window
   max: 3, // start 3 blocking after  requests
   message: {error:"Reached the limit on number concurrent requests per user, please try again after 30 seconds, or use Async Service without a limit on concurrent requests."},
   keyGenerator: function (req ) {
@@ -74,13 +90,67 @@ router.get('/', function(req, res, next) {
   res.send('Your are accessing MNP-lookup services');
 });
 
-/* GET api page. */
-router.get('/test', function(req, res, next) {
-  jobs.requestedDataToQueue('new_request').then((result) =>{
-    res.json(result);
-  }).catch((err)=>{
-    res.json(err);
+/* GET sample api to test provide api . */
+router.post('/test', function(req, res, next) {
+  // jobs.requestedDataToQueue('new_request').then((result) =>{
+  //   res.json(result);
+  // }).catch((err)=>{
+  //   res.json(err);
+  // });
+
+  console.log(req.data);
+  console.log(req.headers);
+  console.log('----------------');
+
+  res.status(200);
+  res.json({
+    "results":[
+      {
+        "error":{
+          "groupId":0,
+          "name":"string",
+          "id":0,
+          "description":"string",
+          "permanent":true,
+          "groupName":"string"
+        },
+        "roamingNetwork":{
+          "networkName":"string",
+          "networkPrefix":"string",
+          "countryPrefix":"string",
+          "countryName":"string"
+        },
+        "mccMnc":"string",
+        "imsi":"123123123",
+        "status":{
+          "groupName":"string",
+          "action":"string",
+          "groupId":0,
+          "name":"string",
+          "id":0,
+          "description":"string"
+        },
+        "roaming":true,
+        "originalNetwork":{
+          "networkName":"string",
+          "networkPrefix":"string",
+          "countryPrefix":"string",
+          "countryName":"string"
+        },
+        "portedNetwork":{
+          "networkName":"string",
+          "networkPrefix":"string",
+          "countryPrefix":"string",
+          "countryName":"string"
+        },
+        "ported":true,
+        "to":"string",
+        "servingMSC":"string"
+      }
+    ],
+    "bulkId":"string"
   });
+
 });
 
 /* POST api/authenticate page. */
@@ -109,7 +179,7 @@ router.post('/MNP-Lookup',
     }else {
       // res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
       // RequestDataModel
-      RequestDataModel.createRequest(req)
+      RequestDataModel.createAsyncRequest(req)
         .then((result) => {
           if(result.errorMessage){
             res.status(result.statusCode)
@@ -122,13 +192,45 @@ router.post('/MNP-Lookup',
     }
   });
 
+//todo;
 router.get('/MNP-Lookup/:mobile_number',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
-  createAccountLimiter,
+  requestLimiter,
   function(req, res){
-    res.status(200);
-    res.json({status:"Processing", response: pendingReqCount + 1, mobile_nmber: req.params.mobile_number});
+    if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
+      RequestDataModel.createSyncRequest(req)
+        .then((result) => {
+          if(result.errorMessage){
+            res.status(result.statusCode)
+            res.json({ error: result.errorMessage });
+            result.status = 'error'
+            result.save();
+          }else{
+
+            res.status(200);
+            res.json({status:"Success", results: result});
+          }
+        });
+    }else{
+      res.status(422);
+      res.json({status:"error", message: "Invalid mobile number"});
+    }
   });
+
+router.post('/receiver/:job_id',
+  jobIdIdentifier(),
+  function(req, res){
+  console.log("Web-hook data received", req.body)
+    if(req.body.results && req.body.results.length > 0){
+      mnpResponseMapping.saveMapping(req.body.results, req.job).then((mnp_data)=>{
+        //todo: call the respective Hooks and send data;
+        console.log(dispatcher.dispatcherService(req.job, mnp_data))
+      })
+    }
+  res.status(200);
+  res.json({status:"received"});
+});
+
 
 /* POST api/authenticate page. */
 router.post('/user',

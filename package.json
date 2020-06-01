@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
@@ -24,7 +25,9 @@
     "passport-headerapikey": "^1.2.1",
     "passport-local": "^1.0.0",
     "pug": "^3.0.0",
+    "qs": "^6.9.4",
     "rate-limit-mongo": "^2.2.0",
-    "uuid-apikey": "^1.4.6"
+    "uuid-apikey": "^1.4.6",
+    "winston": "^3.2.1"
   }
 }
