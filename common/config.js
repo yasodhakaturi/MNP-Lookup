@@ -5,7 +5,7 @@ dotenv.config();
 module.exports = {
   endpoint: process.env.API_URL || 'localhost',
   app_url: process.env.APP_URL || 'localhost',
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 8080,
   NODE_ENV: process.env.NODE_ENV || 'development',
   INFOBIP_API_ASYNC_URL: process.env.INFOBIP_API_ASYNC_URL || '',
   INFOBIP_API_SYNC_URL: process.env.INFOBIP_API_SYNC_URL || '',
