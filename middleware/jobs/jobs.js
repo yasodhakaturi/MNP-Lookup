@@ -7,7 +7,7 @@ const mnp_requests_model = require('../../models/mnp_requests_model');
 
 const mnpMapping =  require('../../common/response.mapping');
 const providerRequestor =  require('../../common/provider.requests');
-
+const dispatcher = require('../../common/response.dispatcher');
 const _ = require('lodash');
 
 
@@ -103,7 +103,14 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
 
 
                               if(res.data.results && res.data.results.length > 0){
-                                  mnpMapping.saveMapping(res.data.results, doc)
+                                  mnpMapping.saveMapping(res.data.results, doc).then((allRows)=>{
+                                      dispatcher.dispatcherService(doc, allRows)
+                                      resolve(allRows);
+                                  }).catch((err)=>{
+                                      reject(err);
+                                  })
+                              }else{
+                                  resolve([])
                               }
 
                           }).catch((err)=>{

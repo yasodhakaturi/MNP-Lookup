@@ -42,7 +42,7 @@ const saveMapping = (results, job) => {
         if (rows.length && job) {
           job.status = 'received';
           job.save().catch((err) => {
-            console.log("Failed to save Job status", job)
+            console.log("Failed to save Job status", job, err)
           });
         }
 

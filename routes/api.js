@@ -223,7 +223,7 @@ router.post('/receiver/:job_id',
     if(req.body.results && req.body.results.length > 0){
       mnpResponseMapping.saveMapping(req.body.results, req.job).then((mnp_data)=>{
         //todo: call the respective Hooks and send data;
-        console.log(dispatcher.dispatcherService(req.job, mnp_data))
+        dispatcher.dispatcherService(req.job, mnp_data)
       })
     }
   res.status(200);

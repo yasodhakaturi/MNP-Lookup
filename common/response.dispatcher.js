@@ -12,7 +12,7 @@ const dispatcherService = (job, mnp_data)=>{
     return mnp.msisdn
   });
   if(job.receive_batch_ids){
-   if(job.receive_batch_ids.length > 1){
+
      // map mobile number of each batch and the data received in responsedata_model for the job received
     _.each(job.receive_batch_ids, (batch)=>{
       requested_data_model.findByBatchStatus(batch, 'inprogress').then((reqRow)=>{
@@ -53,9 +53,7 @@ const dispatcherService = (job, mnp_data)=>{
         console.log("Failed to fetch batch row", err)
       })
     })
-   }else if(job.receive_batch_ids.length == 1){
-     // sinnce only one batch avaialble get the hook and dispatch the data
-   }
+
   }
 
 }
