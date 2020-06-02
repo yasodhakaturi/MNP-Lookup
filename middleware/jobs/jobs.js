@@ -103,7 +103,7 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
 
 
                               if(res.data.results && res.data.results.length > 0){
-                                  mnpMapping.saveMapping(res.results, doc)
+                                  mnpMapping.saveMapping(res.data.results, doc)
                               }
 
                           }).catch((err)=>{

@@ -192,7 +192,6 @@ router.post('/MNP-Lookup',
     }
   });
 
-//todo;
 router.get('/MNP-Lookup/:mobile_number',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   requestLimiter,
@@ -230,6 +229,10 @@ router.post('/receiver/:job_id',
   res.status(200);
   res.json({status:"received"});
 });
+
+router.post('/test-web-hook', function(req, res){
+  console.log("test web hook for testing data received", req.body)
+})
 
 
 /* POST api/authenticate page. */
