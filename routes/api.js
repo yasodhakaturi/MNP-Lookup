@@ -232,6 +232,8 @@ router.post('/receiver/:job_id',
 
 router.post('/test-web-hook', function(req, res){
   console.log("test web hook for testing data received", req.body)
+  res.status(200);
+  res.json({status:"received"});
 })
 
 
