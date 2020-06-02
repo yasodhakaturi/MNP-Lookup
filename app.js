@@ -22,9 +22,9 @@ app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 
-if(ENV.NODE_ENV === 'production') {
-  app.use(forceSsl);
-}
+// if(ENV.NODE_ENV === 'production') {
+//   app.use(forceSsl);
+// }
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
