@@ -87,7 +87,7 @@ const requestLimiter = rateLimit({
 
 /* GET api page. */
 router.get('/', function(req, res, next) {
-  res.send('Your are accessing MNP-lookup services');
+  res.send('Welcome to Mobilytics.me MNP services');
 });
 
 /* GET sample api to test provide api . */
