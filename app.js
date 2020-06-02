@@ -77,8 +77,8 @@ app.use(function(err, req, res, next) {
 
 // schedule tasks to be run on the server
 cron.schedule("* * * * *", function() {
-  console.log("---------------------");
-  console.log("Running Process Queue Cron Job");
+  // console.log("---------------------");
+  // console.log("Running Process Queue Cron Job");
   // fs.unlink("./error.log", err => {
   //   if (err) throw err;
   //   console.log("Error file succesfully deleted");
@@ -93,8 +93,8 @@ cron.schedule("* * * * *", function() {
 
 // schedule tasks to be run on the server
 cron.schedule("* * * * *", function() {
-  console.log("---------------------");
-  console.log("Running Fetcher Cron Job");
+  // console.log("---------------------");
+  // console.log("Running Fetcher Cron Job");
   // fs.unlink("./error.log", err => {
   //   if (err) throw err;
   //   console.log("Error file succesfully deleted");

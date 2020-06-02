@@ -71,7 +71,18 @@ const jobIdIdentifier = function(){
       return next(null, job, { scope: 'all' });
     })
   }
-}
+};
+
+const batchIdIdentifier = function(){
+  return function (req, res, next){
+    RequestDataModel.model.findOne({ _id: req.params.batch_id }, function (err, batch) {
+        if (err) { return next(err); }
+      if (!batch) { return next(null, false); };
+      req.batch = batch;
+      return next(null, batch, { scope: 'all' });
+    })
+  }
+};
 
 //TODO: skip the count if the requested mobile number data is already exists.
 const requestLimiter = rateLimit({
@@ -230,10 +241,42 @@ router.post('/receiver/:job_id',
   res.json({status:"received"});
 });
 
-router.post('/test-web-hook', function(req, res){
+router.post('/test-web-hook',
+  function(req, res){
   console.log("test web hook for testing data received", req.body)
   res.status(200);
-  res.json({status:"received"});
+  res.json({status:""});
+})
+
+//todo: get the request batch status
+router.get('/MNP-Lookup-Status/:batch_id',
+  batchIdIdentifier(),
+  function(req, res){
+  console.log("service to get the status of batch requested", req.body)
+  if(!req.batch || !req.batch._id){
+    res.status(404);
+    res.json({error:"Error: Sorry we're not able to identify the batch number provided"});
+  }else {
+    let batch = req.batch;
+    MnpRequestModel.getBatchStatusDetails(batch).then((details)=>{
+      res.status(200);
+      res.json({batch_id:req.params.batch_id, batch_details:{
+          "requested": batch.requested_data,
+          "dispatched": batch.dispatched_count,
+          "dispatched_details": details || [],
+          "status": batch.status
+        }});
+    }).catch(()=>{
+      res.status(200);
+      res.json({batch_id:req.params.batch_id, batch_details:{
+          "requested": batch.requested_data,
+          "dispatched": batch.dispatched_count,
+          "dispatched_details":{"error": "failed to fetch dispatched details"},
+          "status": batch.status
+        }});
+    })
+
+  }
 })
 
 
@@ -275,12 +318,20 @@ router.post('/user',
             res.json({ error: result.errorMessage })
           }else{
             res.status(201);
-            res.json({status:"Success",id: result._id});
+            res.json({status:"Success",id: result._id, details:{
+                first_name: result.firstName,
+                last_name: result.lastName,
+                company_name: result.companyName,
+                email: result.email,
+                api_key: result.apikey
+              } });
           }
         });
     }
 
   });
+
+
 
 //
 // const UsersController = require('./controllers/users.controller');

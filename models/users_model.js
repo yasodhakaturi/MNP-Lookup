@@ -18,7 +18,7 @@ const userSchema = new Schema({
     type: String,
     required: [true, 'Password is Required!']
   },
-  companyNmae: {
+  companyName: {
     type: String
   },
   permissionLevel: {
@@ -67,23 +67,19 @@ exports.createUser = (userData) => {
   return new Promise((resolve, reject) => {
     const user = new User(userData);
     const err = user.validateSync();
-    console.log(err, user)
     if(user){
-      user.save((err, u) => {
-        // if (err) return handleError(err);
-        if (err) {
-          console.log(err)
-          if(err.code == 11000){
-            err.statusCode = 422
-            err.errorMessage = "User Already Exists!"
-          }else{
-            err.statusCode = 500
-            err.errorMessage = err.errmsg
-          }
-          resolve(err);
-        } else {
-          resolve(u);
+      user.save().then((u) => {
+        resolve(u);
+      }).catch((e)=>{
+        console.log("failed to create user")
+        if(e.code == 11000){
+          e.statusCode = 422
+          e.errorMessage = "User Already Exists!"
+        }else{
+          e.statusCode = 500
+          e.errorMessage = err.errmsg || "failed to create user"
         }
+        resolve(e);
       });
     }
 

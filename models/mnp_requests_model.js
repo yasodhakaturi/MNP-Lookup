@@ -39,3 +39,17 @@ const mnpRequestsSchema = new Schema({
 const MNPRequestData = mongoose.model('MnpRequests', mnpRequestsSchema);
 
 exports.model = MNPRequestData;
+
+exports.getBatchStatusDetails = (batch) => {
+  return new Promise((resolve, reject) => {
+    resolve([])
+    // MNPRequestData.find({receive_batch_ids: batch._id}, function (err, result) {
+    //   if (err) reject(err);
+    //   //result = result.toJSON();
+    //   //delete result._id;
+    //   //delete result.__v;
+    //   resolve(_.map(result, 'response'));
+    // });
+    //
+  })
+}
