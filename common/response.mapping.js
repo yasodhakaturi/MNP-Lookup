@@ -18,7 +18,10 @@ class ResponseSchema{
 
     this.isported = _.get(res, ['ported'], "");
     this.isroaming = _.get(res, ['roaming'], "");
-    this.isvalid = _.get(res, ['error','groupId'], "");
+
+    let isvalid = _.get(res, ['error','groupId'], "") ;
+    this.isvalid = isvalid == 0 ? true : isvalid == 1 ? false : !_.get(res, ['error','permanent'])
+
     this.errorcode = _.get(res, ['error','groupName'], "");
     this.errorstatus = _.get(res, ['error','name'], "");
   }
