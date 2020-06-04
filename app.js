@@ -8,6 +8,7 @@ const _ = require('lodash')
 var ENV = require('./common/config');
 const cron = require("node-cron");
 var forceSsl = require('express-force-ssl');
+const requestIp = require('request-ip');
 
 
 var indexRouter = require('./routes/index');
@@ -36,6 +37,7 @@ app.use(sassMiddleware({
   sourceMap: true
 }));
 
+app.use(requestIp.mw())
 
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');

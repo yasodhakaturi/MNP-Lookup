@@ -5,7 +5,7 @@ var ENV = require('./config')
 const processeddata_model = require('../models/processed_data_model');
 const mnpMapping =  require('../common/response.mapping');
 const doAsyncRequest = (payload) => {
-  console.log('doMnpProviderRequest', payload)
+  // console.log('doMnpProviderRequest', payload)
   return new Promise((resolve, reject) => {
     let url = `${ENV.INFOBIP_API_ASYNC_URL}`;
     let web_hook = `${ENV.endpoint}${ENV.WEB_HOOK_PATH}/${payload._id}`;
@@ -24,7 +24,7 @@ const doAsyncRequest = (payload) => {
       url:url
     };
 
-    console.log('doMnpProviderRequest Trigger', options)
+    // console.log('doMnpProviderRequest Trigger', options)
     axios(options).then(function (response) {
       resolve(response);
     }).catch(function (err) {
@@ -35,7 +35,7 @@ const doAsyncRequest = (payload) => {
 }
 
 const doSyncRequest = (number) => {
-  console.log('doMnpProviderRequest', number)
+  // console.log('doMnpProviderRequest', number)
   return new Promise((resolve, reject) => {
     let url = `${ENV.INFOBIP_API_ASYNC_URL}`;
 
@@ -53,7 +53,7 @@ const doSyncRequest = (number) => {
       url:url
     };
 
-    console.log('doMnpProviderRequest Trigger', options);
+    // console.log('doMnpProviderRequest Trigger', options);
 
 
     axios(options).then(function (response) {

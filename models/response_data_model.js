@@ -12,7 +12,7 @@ const responseDataSchema = new Schema({
   job_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Requests',
-    default:undefined
+    required: false
   },
 
   status: {

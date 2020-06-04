@@ -28,6 +28,10 @@ const userSchema = new Schema({
   apikey:{
     type: String,
     required: [true, 'API Key is Required!']
+  },
+  allowIpAddress:{
+    type: String,
+    default: '*'
   }
 });
 
@@ -71,7 +75,7 @@ exports.createUser = (userData) => {
       user.save().then((u) => {
         resolve(u);
       }).catch((e)=>{
-        console.log("failed to create user")
+        console.log("failed to create user", e)
         if(e.code == 11000){
           e.statusCode = 422
           e.errorMessage = "User Already Exists!"
@@ -86,6 +90,43 @@ exports.createUser = (userData) => {
   });
   // const user = new User(userData);
   // return user.save();
+};
+
+exports.updateUserIps = (ips, id) => {
+  return new Promise((resolve, reject) => {
+    User.findById(id, function (err, user) {
+      if (err) reject(err);
+      user.allowIpAddress = ips.allowIpAddress;
+      user.save(function (err, updatedUser) {
+        if (err) return reject(err);
+        resolve(updatedUser);
+      });
+    });
+  })
+};
+
+exports.updateApiKey = (key, id) => {
+  return new Promise((resolve, reject) => {
+    User.findById(id, function (err, user) {
+      if (err) reject(err);
+      user.apikey = key.apikey;
+      user.save(function (err, updatedUser) {
+        if (err) return reject(err);
+        resolve(updatedUser);
+      });
+    });
+  })
+};
+
+exports.getUserDetailsBy = (key, val) => {
+  return new Promise((resolve, reject) => {
+    let q = {}
+    q[key] = val;
+    User.findOne(q, function (err, user) {
+      if (err) reject(err);
+      resolve(user || []);
+    });
+  })
 };
 
 

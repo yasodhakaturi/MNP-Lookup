@@ -34,7 +34,7 @@ const saveMapping = (results, job) => {
         allRows.push({
           mobile_number: mappedRow.msisdn,
           mnp_data: mappedRow,
-          job_id: (job ? job._id : ''),
+          job_id: (job ? job._id : undefined),
           status: 'new'
         });
       });
@@ -47,7 +47,7 @@ const saveMapping = (results, job) => {
         }
 
       }).catch((err) => {
-        console.log("Failed to save mnp responses", allRows)
+        console.log("Failed to save mnp responses", allRows, err)
       });
 
       resolve(_.map(allRows, 'mnp_data'));

@@ -11,6 +11,9 @@ const requesteddataSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users'
   },
+  requested_ip:{
+    type: String,
+  },
   hook_url: {
     type: String
   },
@@ -45,13 +48,16 @@ exports.createSyncRequest = (req) => {
       received_count:1,
       dispatched_count:0,
       requested_by: req.user,
+      requested_ip: req.clientIp,
       type:'sync',
       status: 'inprogress'
     }
     const requestedData = new RequestData(reqData);
 
     const err = requestedData.validateSync();
-    console.log(err, requestedData)
+    if(err){
+      console.log("Error at createSyncRequest",err)
+    }
     if(requestedData){
       requestedData.save().then((err, u) => {
         providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
@@ -65,7 +71,7 @@ exports.createSyncRequest = (req) => {
           resolve(err);
         })
       }).catch((err)=>{
-        console.log(err)
+        console.log("Error at createSyncRequest requested data",err)
 
         err.statusCode = 500
         err.errorMessage = err.message;
@@ -83,19 +89,22 @@ exports.createAsyncRequest = (req) => {
       requested_data:req.processedData.valid.join(','),
       received_count:req.processedData.valid.length,
       requested_by: req.user,
+      requested_ip: req.clientIp,
       dispatched_count:0,
       type:'async',
       hook_url: req.body.hook_url || "",
       status: 'new_request'
     }
     const requestedData = new RequestData(reqData);
-    const err = requestedData.validateSync();
-    console.log(err, requestedData)
+    if(err){
+      const err = requestedData.validateSync();
+    }
+    console.log("Error at createASyncRequest",err)
     if(requestedData){
       requestedData.save((err, u) => {
         // if (err) return handleError(err);
         if (err) {
-          console.log(err)
+          console.log("Error at createASyncRequest requestedData",err)
           err.statusCode = 500
           err.errorMessage = err.errmsg;
           resolve(err);

@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const uuidAPIKey = require('uuid-apikey');
 const _ = require('lodash');
 const rateLimit = require("express-rate-limit");
+var ipRangeCheck = require("ip-range-check");
 
 const UserModel = require('../models/users_model');
 const RequestDataModel = require('../models/requested_data_model');
@@ -73,6 +74,21 @@ const jobIdIdentifier = function(){
   }
 };
 
+const IPValidator = function(){
+  return function (req, res, next){
+
+    let user = req.user;
+    let userAllowedIps = (user.allowIpAddress || '*').split(',');
+    if(userAllowedIps && userAllowedIps.length > 0 && userAllowedIps[0] != '*'){
+      req.isIpAllowed = ipRangeCheck(req.clientIp, userAllowedIps)
+    }else {
+      req.isIpAllowed = true;
+    }
+
+    next();
+  }
+};
+
 const batchIdIdentifier = function(){
   return function (req, res, next){
     RequestDataModel.model.findOne({ _id: req.params.batch_id }, function (err, batch) {
@@ -109,9 +125,9 @@ router.post('/test', function(req, res, next) {
   //   res.json(err);
   // });
 
-  console.log(req.data);
-  console.log(req.headers);
-  console.log('----------------');
+  // console.log(req.data);
+  // console.log(req.headers);
+  // console.log('----------------');
 
   res.status(200);
   res.json({
@@ -181,13 +197,18 @@ router.get('/unauthorized', function(req, res, next) {
 
 router.post('/MNP-Lookup',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  IPValidator(),
   requestDataValidator(),
+
   function(req, res) {
 
     if(req.processedData.error){
       res.status(req.processedData.error.statusCode);
       res.json({status:"error", message: req.processedData.error.error});
-    }else {
+    }else if(!req.isIpAllowed){
+      res.status(403);
+      res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
+    }else{
       // res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
       // RequestDataModel
       RequestDataModel.createAsyncRequest(req)
@@ -205,9 +226,13 @@ router.post('/MNP-Lookup',
 
 router.get('/MNP-Lookup/:mobile_number',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  IPValidator(),
   requestLimiter,
   function(req, res){
-    if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
+    if(!req.isIpAllowed){
+      res.status(403);
+      res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
+    }else if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
       RequestDataModel.createSyncRequest(req)
         .then((result) => {
           if(result.errorMessage){
@@ -280,7 +305,7 @@ router.get('/MNP-Lookup-Status/:batch_id',
 })
 
 
-/* POST api/authenticate page. */
+/* POST api/user page. */
 router.post('/user',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   function(req, res, next) {
@@ -290,6 +315,7 @@ router.post('/user',
     let firstName = req.body.first_name || "";
     let lastName = req.body.last_name || "";
     let companyName = req.body.company_name || "";
+    let allowIpAddress = req.body.allowed_ips || "*";
     let permissionLevel = 100;
     let apikey = uuidAPIKey.create().apiKey;
     let createdBy = req.user._id;
@@ -311,7 +337,7 @@ router.post('/user',
       req.body.password = salt + "$" + hash;
       req.body.permissionLevel = 1;
       console.log(`user ${email} created by ${req.user.email}`)
-      UserModel.createUser({email,password,firstName,lastName, companyName, permissionLevel, apikey})
+      UserModel.createUser({email,password,firstName,lastName, companyName, permissionLevel, apikey, allowIpAddress})
         .then((result) => {
           if(result.errorMessage){
             res.status(result.statusCode)
@@ -331,6 +357,112 @@ router.post('/user',
 
   });
 
+/* GET api/user/:userid details. */
+router.get('/user',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  function(req, res, next) {
+    var key = req.query.key;
+    var val = req.query.val;
+    if(key == 'email' && val){
+      key = 'email'
+    }else if(key == 'api_key' && val){
+      key = 'apikey'
+    }else if(key == 'id' && val){
+      key = '_id'
+    }else{
+      res.status(401);
+      res.json({status:"error",message: "UnAuthorized"});
+    }
+
+    if(req.user.permissionLevel == 100){
+      res.status(401);
+      res.json({status:"error",message: "UnAuthorized"});
+    }else{
+
+      UserModel.getUserDetailsBy(key, val)
+        .then((result) => {
+          if(result.errorMessage){
+            res.status(result.statusCode)
+            res.json({ error: result.errorMessage })
+          }else{
+            res.status(201);
+            res.json({status:"Success",id: result._id, details:{
+                first_name: result.firstName,
+                last_name: result.lastName,
+                company_name: result.companyName,
+                email: result.email,
+                api_key: result.apikey,
+                allowed_ips:result.allowIpAddress
+              } });
+          }
+        });
+    }
+
+  });
+
+/* POST api/user/:userid page. */
+router.patch('/user/:user_id/update_ips',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  function(req, res, next) {
+
+    let allowIpAddress = req.body.allowed_ips || "*";
+    let userId = req.params.user_id;
+    if(req.user.permissionLevel == 100){
+      res.status(401);
+      res.json({status:"error",message: "UnAuthorized"});
+    }else{
+
+      UserModel.updateUserIps({allowIpAddress}, userId)
+        .then((result) => {
+          if(result.errorMessage){
+            res.status(result.statusCode)
+            res.json({ error: result.errorMessage })
+          }else{
+            res.status(201);
+            res.json({status:"Success",id: result._id, details:{
+                first_name: result.firstName,
+                last_name: result.lastName,
+                company_name: result.companyName,
+                email: result.email,
+                api_key: result.apikey,
+                allowed_ips:result.allowIpAddress
+              } });
+          }
+        });
+    }
+
+  });
+/* POST api/user/:userid page. */
+router.patch('/user/:user_id/reset_api_key',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  function(req, res, next) {
+
+    let userId = req.params.user_id;
+    if(req.user.permissionLevel == 100){
+      res.status(401);
+      res.json({status:"error",message: "UnAuthorized"});
+    }else{
+      let apikey = uuidAPIKey.create().apiKey;
+      UserModel.updateApiKey({apikey}, userId)
+        .then((result) => {
+          if(result.errorMessage){
+            res.status(result.statusCode)
+            res.json({ error: result.errorMessage })
+          }else{
+            res.status(201);
+            res.json({status:"Success",id: result._id, details:{
+                first_name: result.firstName,
+                last_name: result.lastName,
+                company_name: result.companyName,
+                email: result.email,
+                api_key: result.apikey,
+                allowed_ips:result.allowIpAddress
+              } });
+          }
+        });
+    }
+
+  });
 
 
 //
