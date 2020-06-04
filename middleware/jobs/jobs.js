@@ -52,14 +52,14 @@ exports.requestedDataToQueue = (status, res) => {
 };
 
 exports.requestedQueueToFetcher = (status, limit, res) => {
-    console.log('-------Fetcher Job Triggered-------')
+    // console.log('-------Fetcher Job Triggered-------')
     return new Promise((resolve, reject) => {
         processeddata_model.findByStatusWithLimit(status, limit)
           .then((results) => {
 
               if(results.length > 0){
                   // we get bunch of records.
-                  console.log('-------Fetcher Data Received-------', results)
+                  // console.log('-------Fetcher Data Received-------', results)
                   let fetcherJob = {};
 
                   fetcherJob.req_ids = _.map(results, (r)=>{return r._id;});
@@ -70,7 +70,7 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                   fetcherJob.status = 'new';
 
                   fetcherJob = new mnp_requests_model.model(fetcherJob);
-                  console.log('-------Fetcher Data model-------', fetcherJob)
+                  // console.log('-------Fetcher Data model-------', fetcherJob)
                   fetcherJob.save().then((doc)=>{
 
                       console.log('fetcherJob save', doc)

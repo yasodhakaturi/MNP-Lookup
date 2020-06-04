@@ -86,7 +86,9 @@ cron.schedule("* * * * *", function() {
   //   console.log("Error file succesfully deleted");
   // });
   jobs.requestedDataToQueue('new_request').then((result) =>{
-    console.log("processed queue:", _.map(result, 'mobile_number'))
+    if(result && result.length){
+      console.log("processed queue:", _.map(result, 'mobile_number'))
+    }
   }).catch((err)=>{
     console.log(err)
   });
@@ -105,7 +107,9 @@ cron.schedule("* * * * *", function() {
 
   setTimeout(function() {
     jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
-      console.log("fetch requested:", _.map(result, 'mobile_number'))
+      if(result && result.length){
+        console.log("fetch requested:", _.map(result, 'mobile_number'))
+      }
     }).catch((err)=>{
       console.log(err)
     });
