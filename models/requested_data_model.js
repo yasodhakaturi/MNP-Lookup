@@ -96,10 +96,10 @@ exports.createAsyncRequest = (req) => {
       status: 'new_request'
     }
     const requestedData = new RequestData(reqData);
+    const err = requestedData.validateSync();
     if(err){
-      const err = requestedData.validateSync();
+      console.log("Error at createSyncRequest",err)
     }
-    console.log("Error at createASyncRequest",err)
     if(requestedData){
       requestedData.save((err, u) => {
         // if (err) return handleError(err);
