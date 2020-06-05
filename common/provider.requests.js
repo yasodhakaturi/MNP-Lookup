@@ -11,7 +11,7 @@ const doAsyncRequest = (payload) => {
     let web_hook = `${ENV.endpoint}${ENV.WEB_HOOK_PATH}/${payload._id}`;
 
     // const data = qs.stringify({"to":payload.req_payload.join(','),"notifyContentType":"string","notifyUrl":web_hook});
-    const data = {"to":payload.req_payload.join(','),"notifyContentType":"string","notifyUrl":web_hook};
+    const data = {"to":payload.req_payload,"notifyContentType":"string","notifyUrl":web_hook};
 
     const options = {
       method: 'post',
