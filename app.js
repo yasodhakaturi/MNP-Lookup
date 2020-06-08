@@ -90,8 +90,7 @@ cron.schedule("* * * * *", function() {
 
 
 // schedule tasks to be run on the server
-cron.schedule("* * * * *", function() {
-
+cron.schedule("*/20 * * * * *", function() {
   setTimeout(function() {
     jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
       if(result && result.length){
