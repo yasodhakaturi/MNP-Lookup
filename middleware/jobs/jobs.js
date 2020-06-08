@@ -83,7 +83,7 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                                   row.status = 'inprogress';
                                   row.job_id = job._id;
                                   row.save().then((savedRow)=>{
-                                      console.log('Fetcher Data row Status Updated', savedRow)
+                                      console.log('Fetcher Data row Status Updated', savedRow.mobile_number)
                                   }).catch((err)=>{
                                       console.log(err);
                                   });
