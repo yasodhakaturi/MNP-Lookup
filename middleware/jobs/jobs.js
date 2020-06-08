@@ -71,17 +71,17 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
 
                   fetcherJob = new mnp_requests_model.model(fetcherJob);
                   // console.log('-------Fetcher Data model-------', fetcherJob)
-                  fetcherJob.save().then((doc)=>{
+                  fetcherJob.save().then((job)=>{
 
-                      console.log('fetcherJob save', doc)
+                      //console.log('fetcherJob save', job)
                       // request a Service API.
-                      if(!doc.req_payload || doc.req_payload.length == 0){
+                      if(!job.req_payload || job.req_payload.length == 0){
                           reject({"error": "No payload"});
                       }else{
-                          providerRequestor.doAsyncMnpRequest(doc).then((res)=>{
+                          providerRequestor.doAsyncMnpRequest(job).then((res)=>{
                               _.each(results, (row)=>{
                                   row.status = 'inprogress';
-                                  row.job_id = doc._id;
+                                  row.job_id = job._id;
                                   row.save().then((savedRow)=>{
                                       console.log('Fetcher Data row Status Updated', savedRow)
                                   }).catch((err)=>{
@@ -96,22 +96,31 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                                   received_on:Date.now()
                               };
                               fetcherJob.bulk_id = fetcherJob.response.bulk_id;
-
-                              fetcherJob.save().catch((saveerr)=>{
-                                  console.log("Failed to save response",saveerr)
+                              fetcherJob.status = "requested";
+                              fetcherJob.save().then(()=>{
+                                  if(res.data.results && res.data.results.length > 0){
+                                      mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
+                                          dispatcher.dispatcherService(job, allRows)
+                                          resolve(allRows);
+                                      }).catch((err)=>{
+                                          reject(err);
+                                      })
+                                  }else{
+                                      resolve([])
+                                  }
+                              }).catch((saveerr)=>{
+                                  console.log("Failed to save response in fetcherJob",saveerr);
+                                  if(res.data.results && res.data.results.length > 0){
+                                      mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
+                                          dispatcher.dispatcherService(job, allRows)
+                                          resolve(allRows);
+                                      }).catch((err)=>{
+                                          reject(err);
+                                      })
+                                  }else{
+                                      resolve([])
+                                  }
                               });
-
-
-                              if(res.data.results && res.data.results.length > 0){
-                                  mnpMapping.saveMapping(res.data.results, doc).then((allRows)=>{
-                                      dispatcher.dispatcherService(doc, allRows)
-                                      resolve(allRows);
-                                  }).catch((err)=>{
-                                      reject(err);
-                                  })
-                              }else{
-                                  resolve([])
-                              }
 
                           }).catch((err)=>{
 
@@ -135,18 +144,6 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                           reject(error);
                       }
                   })
-                  // mnp_requests_model.model.insert(fetcherJob, function(error, doc) {
-                  //     if(error){
-                  //         reject(error);
-                  //     }
-                  //     console.log(doc)
-                  //     // _.each(results, (row)=>{
-                  //     //     // requesteddata_model.updateStatus(doc.batch_id, 'inprogress')
-                  //     //     row.status = 'inprogress';
-                  //     //     row.save();
-                  //     // })
-                  //
-                  // })
 
               }else{
                   resolve([])

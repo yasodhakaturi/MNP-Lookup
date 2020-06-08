@@ -9,13 +9,13 @@ const requested_data_model = require('../models/requested_data_model');
 
 const dispatcherService = (job, mnp_data)=>{
   let mnpDataAsMobileKeys = _.mapKeys(mnp_data, (mnp) => {
-    return mnp.msisdn
+    return mnp.get('mobile_number')
   });
   if(job.receive_batch_ids){
 
      // map mobile number of each batch and the data received in responsedata_model for the job received
     _.each(job.receive_batch_ids, (batch)=>{
-      requested_data_model.findByBatchStatus(batch, 'inprogress').then((reqRow)=>{
+      requested_data_model.findByBatchStatus(batch, 'inprogress|partial').then((reqRow)=>{
         let all_numbers = reqRow.requested_data.split(',');
         let filteredMnpData = _.values(_.filter(mnpDataAsMobileKeys, (mnpRow, mobi)=>{
           return _.includes(all_numbers, mobi);
@@ -41,16 +41,25 @@ const dispatcherService = (job, mnp_data)=>{
               reqRow.status = "completed"
             }
             reqRow.save().then(()=>{
-              console.log(`Resquests ${batch} status updated`)
+              console.log(`Requests ${batch} status updated`)
             });
-            console.log(`Dispatched ${batch} with ${filteredMnpData.length} numbers`)
+            console.log(`Dispatched ${batch} with ${filteredMnpData.length} numbers`);
+
+            _.each(filteredMnpData, (mnp_data)=> {
+              processed_data_model.model.findOne({"mobile_number":mnp_data.mobile_number, job_id: job._id}).then((prow)=>{
+                prow.status = "completed"
+                prow.save().then(()=>{
+                  console.log('processed queue row status');
+                })
+              });
+            })
           }).catch(function (err) {
             console.log('Failed Dispatch Request', err)
           });
         }
 
       }).catch((err)=>{
-        console.log("Failed to fetch batch row", err)
+        console.error("Failed to fetch batch row", err)
       })
     })
 

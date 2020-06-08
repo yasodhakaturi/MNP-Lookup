@@ -79,12 +79,6 @@ app.use(function(err, req, res, next) {
 
 // schedule tasks to be run on the server
 cron.schedule("* * * * *", function() {
-  // console.log("---------------------");
-  // console.log("Running Process Queue Cron Job");
-  // fs.unlink("./error.log", err => {
-  //   if (err) throw err;
-  //   console.log("Error file succesfully deleted");
-  // });
   jobs.requestedDataToQueue('new_request').then((result) =>{
     if(result && result.length){
       console.log("processed queue:", _.map(result, 'mobile_number'))
@@ -97,17 +91,11 @@ cron.schedule("* * * * *", function() {
 
 // schedule tasks to be run on the server
 cron.schedule("* * * * *", function() {
-  // console.log("---------------------");
-  // console.log("Running Fetcher Cron Job");
-  // fs.unlink("./error.log", err => {
-  //   if (err) throw err;
-  //   console.log("Error file succesfully deleted");
-  // });
-
 
   setTimeout(function() {
     jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
       if(result && result.length){
+        // console.log("fetch requested:", _.map(result, (r)=>{ return r.get('msisdn')}))
         console.log("fetch requested:", _.map(result, 'mobile_number'))
       }
     }).catch((err)=>{

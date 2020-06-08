@@ -41,19 +41,19 @@ const saveMapping = (results, job) => {
           status: 'new'
         });
       });
-      mnp_response_model.model.insertMany(allRows).then((rows) => {
+      mnp_response_model.model.insertMany(allRows, function(error, rows) {
+        if(error){
+          console.log("Failed to save mnp responses", allRows, error)
+          reject(error);
+        }
         if (rows.length && job) {
           job.status = 'received';
           job.save().catch((err) => {
             console.log("Failed to save Job status", job, err)
           });
         }
-
-      }).catch((err) => {
-        console.log("Failed to save mnp responses", allRows, err)
+        resolve(rows);
       });
-
-      resolve(_.map(allRows, 'mnp_data'));
 
     } else {
       resolve([])

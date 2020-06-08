@@ -133,12 +133,27 @@ exports.findByStatus = (statusmode) => {
 
 exports.findByBatchStatus= (batch_id, statusmode) => {
   return new Promise((resolve, reject) => {
-    RequestData.findOne({ status: statusmode, '_id': batch_id }, function (err, result) {
-      if (err) reject(err);
-      //result = result.toJSON();
-      //delete result._id;
-      //delete result.__v;
-      resolve(result);
-    });
+    statusmode = statusmode.split('|')
+    if(statusmode.length > 1){
+      RequestData.findOne({$or: [
+            { status: statusmode[0], '_id': batch_id },
+            { status: statusmode[1], '_id': batch_id }
+          ]}, function (err, result) {
+        if (err) reject(err);
+        //result = result.toJSON();
+        //delete result._id;
+        //delete result.__v;
+        resolve(result);
+      });
+    }else{
+      RequestData.findOne({ status: statusmode[0], '_id': batch_id }, function (err, result) {
+        if (err) reject(err);
+        //result = result.toJSON();
+        //delete result._id;
+        //delete result.__v;
+        resolve(result);
+      });
+    }
+
   })
 };
