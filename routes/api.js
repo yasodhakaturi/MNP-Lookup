@@ -334,8 +334,8 @@ router.post('/user',
     }else{
       let salt = crypto.randomBytes(16).toString('base64');
       let hash = crypto.createHmac('sha512', salt).update(req.body.password || "sample").digest("base64");
-      req.body.password = salt + "$" + hash;
-      req.body.permissionLevel = 1;
+      password = salt + "$" + hash;
+
       console.log(`user ${email} created by ${req.user.email}`)
       UserModel.createUser({email,password,firstName,lastName, companyName, permissionLevel, apikey, allowIpAddress})
         .then((result) => {
