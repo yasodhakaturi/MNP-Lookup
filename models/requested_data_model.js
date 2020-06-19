@@ -37,7 +37,7 @@ const requesteddataSchema = new Schema({
 });
 
 const RequestData = mongoose.model('Requests', requesteddataSchema);
-
+const mnp_response_model = require('../models/response_data_model');
 
 exports.model = RequestData;
 
@@ -60,16 +60,46 @@ exports.createSyncRequest = (req) => {
     }
     if(requestedData){
       requestedData.save().then((err, u) => {
-        providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
-          requestedData.dispatched_count = 1;
-          requestedData.status = 'completed';
-          requestedData.save();
-          resolve(mappedRows);
-        }).catch((err)=>{
-          err.statusCode = 500
-          err.errorMessage = err.message;
-          resolve(err);
+
+        //TODO: look if the response available for this mobile number in last 28 days.
+        // if found send the same response if not fetch from provider.
+
+        mnp_response_model.getMNPBYMobileNumber(req.params.mobile_number).then((mnpData)=>{
+          if(mnpData){
+            console.log('found in DB', req.params.mobile_number)
+            requestedData.dispatched_count = 1;
+            requestedData.status = 'completed';
+            requestedData.save();
+            resolve([mnpData]);
+          }else{
+            console.log('fetching from provider', req.params.mobile_number)
+            providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
+              requestedData.dispatched_count = 1;
+              requestedData.status = 'completed';
+              requestedData.save();
+              resolve(mappedRows);
+            }).catch((err)=>{
+              err.statusCode = 500
+              err.errorMessage = err.message;
+              resolve(err);
+            })
+          }
+        }, (err)=>{
+          console.log("Error at mnp data frm DB for mobile number: " + req.params.mobile_number ,err)
+
+          console.log('fetching from provider', req.params.mobile_number)
+          providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
+            requestedData.dispatched_count = 1;
+            requestedData.status = 'completed';
+            requestedData.save();
+            resolve(mappedRows);
+          }).catch((err2)=>{
+            err2.statusCode = 500
+            err2.errorMessage = err.message;
+            resolve(err2);
+          })
         })
+
       }).catch((err)=>{
         console.log("Error at createSyncRequest requested data",err)
 

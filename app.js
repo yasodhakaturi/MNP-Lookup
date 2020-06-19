@@ -9,7 +9,7 @@ var ENV = require('./common/config');
 const cron = require("node-cron");
 var forceSsl = require('express-force-ssl');
 const requestIp = require('request-ip');
-
+var morgan = require('morgan')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -54,6 +54,7 @@ app.use(function (req, res, next) {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(morgan('combined'))
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);

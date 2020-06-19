@@ -35,7 +35,6 @@ const doAsyncRequest = (payload) => {
 }
 
 const doSyncRequest = (number) => {
-  // console.log('doMnpProviderRequest', number)
   return new Promise((resolve, reject) => {
     let url = `${ENV.INFOBIP_API_ASYNC_URL}`;
 

@@ -103,9 +103,9 @@ const batchIdIdentifier = function(){
 
 //TODO: skip the count if the requested mobile number data is already exists.
 const requestLimiter = rateLimit({
-  windowMs: .5 * 60 * 1000, // 30 sec window
-  max: 3, // start 3 blocking after  requests
-  message: {error:"Reached the limit on number concurrent requests per user, please try again after 30 seconds, or use Async Service without a limit on concurrent requests."},
+  windowMs: 1 * 1000, // 30 sec window
+  max: 5, // start 3 blocking after  requests
+  message: {error:"Reached the limit of 5 concurrent requests per user. you use Async Service without a limit on concurrent requests."},
   keyGenerator: function (req ) {
     return req.user._id;
   },
@@ -118,68 +118,6 @@ router.get('/', function(req, res, next) {
   res.send('Welcome to Mobilytics.me MNP services');
 });
 
-/* GET sample api to test provide api . */
-router.post('/test', function(req, res, next) {
-  // jobs.requestedDataToQueue('new_request').then((result) =>{
-  //   res.json(result);
-  // }).catch((err)=>{
-  //   res.json(err);
-  // });
-
-  // console.log(req.data);
-  // console.log(req.headers);
-  // console.log('----------------');
-
-  res.status(200);
-  res.json({
-    "results":[
-      {
-        "error":{
-          "groupId":0,
-          "name":"string",
-          "id":0,
-          "description":"string",
-          "permanent":true,
-          "groupName":"string"
-        },
-        "roamingNetwork":{
-          "networkName":"string",
-          "networkPrefix":"string",
-          "countryPrefix":"string",
-          "countryName":"string"
-        },
-        "mccMnc":"string",
-        "imsi":"123123123",
-        "status":{
-          "groupName":"string",
-          "action":"string",
-          "groupId":0,
-          "name":"string",
-          "id":0,
-          "description":"string"
-        },
-        "roaming":true,
-        "originalNetwork":{
-          "networkName":"string",
-          "networkPrefix":"string",
-          "countryPrefix":"string",
-          "countryName":"string"
-        },
-        "portedNetwork":{
-          "networkName":"string",
-          "networkPrefix":"string",
-          "countryPrefix":"string",
-          "countryName":"string"
-        },
-        "ported":true,
-        "to":"string",
-        "servingMSC":"string"
-      }
-    ],
-    "bulkId":"string"
-  });
-
-});
 
 /* POST api/authenticate page. */
 router.post('/authenticate',
@@ -244,7 +182,7 @@ router.get('/MNP-Lookup/:mobile_number',
           }else{
 
             res.status(200);
-            res.json({status:"Success", results: result});
+            res.json({status:"Success", results: _.map(result, _.partialRight(_.pick, ['mobile_number', "mnp_data"]))});
           }
         });
     }else{
@@ -254,6 +192,7 @@ router.get('/MNP-Lookup/:mobile_number',
   });
 
 router.post('/receiver/:job_id',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   jobIdIdentifier(),
   function(req, res){
   console.log("Web-hook data received", req.body)
@@ -276,6 +215,7 @@ router.post('/test-web-hook',
 
 //todo: get the request batch status
 router.get('/MNP-Lookup-Status/:batch_id',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   batchIdIdentifier(),
   function(req, res){
   console.log("service to get the status of batch requested", req.body)
@@ -433,6 +373,7 @@ router.patch('/user/:user_id/update_ips',
     }
 
   });
+
 /* POST api/user/:userid page. */
 router.patch('/user/:user_id/reset_api_key',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
