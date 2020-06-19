@@ -81,6 +81,7 @@ const IPValidator = function(){
     let userAllowedIps = (user.allowIpAddress || '*').split(',');
     if(userAllowedIps && userAllowedIps.length > 0 && userAllowedIps[0] != '*'){
       req.isIpAllowed = ipRangeCheck(req.clientIp, userAllowedIps)
+      console.log("IP Validator: ",req.clientIp, userAllowedIps, req.isIpAllowed)
     }else {
       req.isIpAllowed = true;
     }
