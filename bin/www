@@ -11,6 +11,11 @@ var http = require('http');
 const https = require('https');
 const fs = require('fs');
 
+require('console-stamp')(console, { pattern: 'dd/mm/yyyy HH:MM:ss.l', colors: {
+    stamp: 'yellow',
+    label: 'white',
+  }});
+
 
 /**
  * Get port from environment and store in Express.
