@@ -3,13 +3,13 @@ const axios = require('axios');
 const qs = require('qs');
 var ENV = require('./config')
 const processed_data_model = require('../models/processed_data_model');
-const response_data_model = require('../models/response_data_model');
+
 const requested_data_model = require('../models/requested_data_model');
 
 
 const dispatcherService = (job, mnp_data)=>{
   let mnpDataAsMobileKeys = _.mapKeys(mnp_data, (mnp) => {
-    return mnp.get('mobile_number')
+    return mnp.get ? mnp.get('mobile_number') : mnp.mobile_number
   });
   if(job.receive_batch_ids){
 
@@ -47,10 +47,13 @@ const dispatcherService = (job, mnp_data)=>{
 
             _.each(filteredMnpData, (mnp_data)=> {
               processed_data_model.model.findOne({"mobile_number":mnp_data.mobile_number, job_id: job._id}).then((prow)=>{
-                prow.status = "completed"
-                prow.save().then(()=>{
-                  console.log('processed queue row status');
-                })
+                if(prow){
+                  prow.status = "completed"
+                  prow.save().then(()=>{
+                    console.log('processed queue row status');
+                  })
+                }
+
               });
             })
           }).catch(function (err) {

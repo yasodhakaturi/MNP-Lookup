@@ -28,7 +28,7 @@ const mnpRequestsSchema = new Schema({
 
   status: {
     type: String,
-    enum: ['new','requested', 'received'],
+    enum: ['new','requested', 'received','available'],
     default:'new'
   },
   submitted_date: {

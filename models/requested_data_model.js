@@ -39,6 +39,8 @@ const requesteddataSchema = new Schema({
 const RequestData = mongoose.model('Requests', requesteddataSchema);
 const mnp_response_model = require('../models/response_data_model');
 
+const _ = require('lodash');
+
 exports.model = RequestData;
 
 exports.createSyncRequest = (req) => {
@@ -65,14 +67,14 @@ exports.createSyncRequest = (req) => {
         // if found send the same response if not fetch from provider.
 
         mnp_response_model.getMNPBYMobileNumber(req.params.mobile_number).then((mnpData)=>{
-          if(mnpData){
-            console.log('found in DB', req.params.mobile_number)
+          if(mnpData.length > 0){
+            console.log('found in DB', req.params.mobile_number);
             requestedData.dispatched_count = 1;
             requestedData.status = 'completed';
             requestedData.save();
-            resolve([mnpData]);
+            resolve(_.castArray(mnpData));
           }else{
-            console.log('fetching from provider', req.params.mobile_number)
+            console.log('fetching from provider', req.params.mobile_number);
             providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
               requestedData.dispatched_count = 1;
               requestedData.status = 'completed';
