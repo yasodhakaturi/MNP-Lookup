@@ -23,7 +23,7 @@ const dispatcherService = (job, mnp_data)=>{
 
         if(filteredMnpData.length > 0){
           let url = reqRow.hook_url;
-          const data = {batch_id: batch, results: filteredMnpData};
+          const data = {batch_id: batch, results: _.map(filteredMnpData, _.partialRight(_.pick, ['mobile_number', "mnp_data"]))};
           const options = {
             method: 'post',
             headers: {
