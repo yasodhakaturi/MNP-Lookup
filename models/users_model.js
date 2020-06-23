@@ -1,6 +1,6 @@
 const mongoose = require('../common/services/mongoose.service').mongoose;
 const Schema = mongoose.Schema;
-
+const _ = require('lodash');
 const userSchema = new Schema({
   firstName: {
     type: String,
@@ -20,6 +20,22 @@ const userSchema = new Schema({
   },
   companyName: {
     type: String
+  },
+  isActive:{
+    type: Boolean,
+    default:false,
+  },
+  isTrail:{
+    type: Boolean,
+    default:true,
+  },
+  requestedCount:{
+    type: Number,
+    default:0
+  },
+  allowedLimit:{
+    type: Number,
+    default:0
   },
   permissionLevel: {
     type: Number,
@@ -97,6 +113,30 @@ exports.updateUserIps = (ips, id) => {
     User.findById(id, function (err, user) {
       if (err) reject(err);
       user.allowIpAddress = ips.allowIpAddress;
+      user.save(function (err, updatedUser) {
+        if (err) return reject(err);
+        resolve(updatedUser);
+      });
+    });
+  })
+};
+exports.updateAllowedLimit = (obj, id) => {
+  return new Promise((resolve, reject) => {
+    User.findById(id, function (err, user) {
+      if (err) reject(err);
+
+      if(!_.isUndefined(obj.allowedLimit)){
+        user.allowedLimit = obj.allowedLimit;
+      }
+
+      if(!_.isUndefined(obj.isTrail)){
+        user.isTrail = obj.isTrail;
+      }
+
+      if(!_.isUndefined(obj.isActive)){
+        user.isActive = obj.isActive;
+      }
+
       user.save(function (err, updatedUser) {
         if (err) return reject(err);
         resolve(updatedUser);

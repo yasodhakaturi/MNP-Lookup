@@ -63,6 +63,60 @@ const requestDataValidator = function (options) {
   }
 };
 
+const trailValidateCountUpdate = function(type){
+  return function (req, res, next) {
+    let user = req.user;
+    if(!req.processedData){
+      req.processedData = {valid:[], invalid:[]}
+    }
+    if(user.isActive){
+      if(user.isTrail){
+        let requestedCount = user.requestedCount;
+        let allowedLimit = user.allowedLimit;
+        let currentRequestNumbers = 0;
+        if(type == 'SYNC'){
+
+          if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
+            currentRequestNumbers = 1;
+            if(allowedLimit < (currentRequestNumbers + requestedCount)){
+              req.processedData.error = {"statusCode": 403, error: "Trail Limit reached, please contact administrator."}
+            }
+          }else{
+            req.processedData.error = {"statusCode": 422, error: "Invalid mobile number"}
+          }
+        }else if(type == 'ASYNC'){
+          currentRequestNumbers = req.processedData.valid.length;
+          if(allowedLimit < (currentRequestNumbers + requestedCount)){
+            req.processedData.error = {"statusCode": 403, error: `Trail Limit will exceed with number of valid numbers, you have ${allowedLimit - requestedCount} credits left, please contact administrator.`}
+          }
+        }
+      }else{
+        let requestedCount = user.requestedCount;
+        let allowedLimit = user.allowedLimit;
+        let currentRequestNumbers = 0;
+        if(type == 'SYNC'){
+          if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
+            currentRequestNumbers = 1;
+            if(allowedLimit < (currentRequestNumbers + requestedCount)){
+              req.processedData.error = {"statusCode": 403, error: "Requests limit reached, please contact administrator."}
+            }
+          }else{
+            req.processedData.error = {"statusCode": 422, error: "Invalid mobile number"}
+          }
+        }else if(type == 'ASYNC'){
+          currentRequestNumbers = req.processedData.valid.length;
+          if(allowedLimit < (currentRequestNumbers + requestedCount)){
+            req.processedData.error = {"statusCode": 403, error: `Requests Limit will exceed with number of valid numbers, you have ${allowedLimit - requestedCount} credits left, please contact administrator.`}
+          }
+        }
+      }
+    }else{
+      req.processedData.error = {"statusCode": 403, error: "User is Inactive, Please contact administrator."}
+    }
+    next()
+  }
+}
+
 const jobIdIdentifier = function(){
   return function (req, res, next){
     MnpRequestModel.model.findOne({ _id: req.params.job_id }, function (err, job) {
@@ -138,15 +192,15 @@ router.post('/MNP-Lookup',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   IPValidator(),
   requestDataValidator(),
-
+  trailValidateCountUpdate('ASYNC'),
   function(req, res) {
 
-    if(req.processedData.error){
-      res.status(req.processedData.error.statusCode);
-      res.json({status:"error", message: req.processedData.error.error});
-    }else if(!req.isIpAllowed){
+    if(!req.isIpAllowed){
       res.status(403);
       res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
+    }else if(req.processedData.error){
+      res.status(req.processedData.error.statusCode);
+      res.json({status:"error", message: req.processedData.error.error});
     }else{
       // res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
       // RequestDataModel
@@ -156,8 +210,11 @@ router.post('/MNP-Lookup',
             res.status(result.statusCode)
             res.json({ error: result.errorMessage })
           }else{
+            let validNumbers = result.requested_data.split(',')
             res.status(200);
-            res.json({status:"Processing",batch_id: result._id, valid_numbers: result.requested_data.split(','), invalid_numbers: req.processedData.invalid});
+            res.json({status:"Processing",batch_id: result._id, valid_numbers: validNumbers, invalid_numbers: req.processedData.invalid});
+            req.user.requestedCount = req.user.requestedCount + validNumbers.length;
+            req.user.save();
           }
         });
     }
@@ -167,10 +224,14 @@ router.get('/MNP-Lookup/:mobile_number',
   passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
   IPValidator(),
   requestLimiter,
+  trailValidateCountUpdate('SYNC'),
   function(req, res){
     if(!req.isIpAllowed){
       res.status(403);
       res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
+    }if(req.processedData.error){
+      res.status(req.processedData.error.statusCode);
+      res.json({status:"error", message: req.processedData.error.error});
     }else if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
       RequestDataModel.createSyncRequest(req)
         .then((result) => {
@@ -183,6 +244,8 @@ router.get('/MNP-Lookup/:mobile_number',
 
             res.status(200);
             res.json({status:"Success", results: _.map(result, _.partialRight(_.pick, ['mobile_number', "mnp_data"]))});
+            req.user.requestedCount = req.user.requestedCount + 1;
+            req.user.save();
           }
         });
     }else{
@@ -257,6 +320,10 @@ router.post('/user',
     let lastName = req.body.last_name || "";
     let companyName = req.body.company_name || "";
     let allowIpAddress = req.body.allowed_ips || "*";
+    let isActive = !!req.body.is_active;
+    let isTrail = !!req.body.is_trail;
+    let allowedLimit =  req.body.allowed_credits || (!!req.body.is_trail ? 15 : 100000);
+
     let permissionLevel = 100;
     let apikey = uuidAPIKey.create().apiKey;
     let createdBy = req.user._id;
@@ -278,7 +345,7 @@ router.post('/user',
       password = salt + "$" + hash;
 
       console.log(`user ${email} created by ${req.user.email}`)
-      UserModel.createUser({email,password,firstName,lastName, companyName, permissionLevel, apikey, allowIpAddress})
+      UserModel.createUser({email,password,firstName,lastName, companyName, permissionLevel, apikey, allowIpAddress, isTrail, allowedLimit, isActive})
         .then((result) => {
           if(result.errorMessage){
             res.status(result.statusCode)
@@ -290,7 +357,11 @@ router.post('/user',
                 last_name: result.lastName,
                 company_name: result.companyName,
                 email: result.email,
-                api_key: result.apikey
+                api_key: result.apikey,
+                is_active: result.isActive,
+                is_trail: result.isTrail,
+                used_credits:result.requestedCount,
+                allowed_credits:result.allowedLimit
               } });
           }
         });
@@ -333,7 +404,11 @@ router.get('/user',
                 company_name: result.companyName,
                 email: result.email,
                 api_key: result.apikey,
-                allowed_ips:result.allowIpAddress
+                allowed_ips:result.allowIpAddress,
+                is_active: result.isActive,
+                is_trail: result.isTrail,
+                used_credits:result.requestedCount,
+                allowed_credits:result.allowedLimit
               } });
           }
         });
@@ -366,7 +441,63 @@ router.patch('/user/:user_id/update_ips',
                 company_name: result.companyName,
                 email: result.email,
                 api_key: result.apikey,
-                allowed_ips:result.allowIpAddress
+                allowed_ips:result.allowIpAddress,
+                is_active: result.isActive,
+                is_trail: result.isTrail,
+                used_credits:result.requestedCount,
+                allowed_credits:result.allowedLimit
+              } });
+          }
+        });
+    }
+
+  });
+
+/* POST api/user/:userid/update_credits page. */
+router.patch('/user/:user_id/update_credits',
+  passport.authenticate('headerapikey', { session: false, failureRedirect: '/api/unauthorized' }),
+  function(req, res, next) {
+
+    let obj = {};
+    if(!_.isUndefined(req.body.allowed_credits)){
+      obj.allowedLimit = +req.body.allowed_credits;
+    }
+
+    if(!_.isUndefined(req.body.is_trail)){
+      obj.isTrail = !!req.body.is_trail;
+    }
+
+    if(!_.isUndefined(req.body.is_active)){
+      obj.isActive = !!req.body.is_active;
+    }
+
+    let userId = req.params.user_id;
+    if(req.user.permissionLevel == 100){
+      res.status(401);
+      res.json({status:"error",message: "UnAuthorized"});
+    } else if(_.keys(obj).length == 0){
+      res.status(422);
+      res.json({status:"error",message: "Invalid request"});
+    }else{
+
+      UserModel.updateAllowedLimit(obj, userId)
+        .then((result) => {
+          if(result.errorMessage){
+            res.status(result.statusCode)
+            res.json({ error: result.errorMessage })
+          }else{
+            res.status(201);
+            res.json({status:"Success",id: result._id, details:{
+                first_name: result.firstName,
+                last_name: result.lastName,
+                company_name: result.companyName,
+                email: result.email,
+                api_key: result.apikey,
+                allowed_ips:result.allowIpAddress,
+                is_active: result.isActive,
+                is_trail: result.isTrail,
+                used_credits:result.requestedCount,
+                allowed_credits:result.allowedLimit
               } });
           }
         });
@@ -398,7 +529,11 @@ router.patch('/user/:user_id/reset_api_key',
                 company_name: result.companyName,
                 email: result.email,
                 api_key: result.apikey,
-                allowed_ips:result.allowIpAddress
+                allowed_ips:result.allowIpAddress,
+                is_active: result.isActive,
+                is_trail: result.isTrail,
+                used_credits:result.requestedCount,
+                allowed_credits:result.allowedLimit
               } });
           }
         });
