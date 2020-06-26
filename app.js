@@ -54,7 +54,36 @@ app.use(function (req, res, next) {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(morgan('combined'))
+app.use(morgan('combined'));
+
+app.use(require('express-status-monitor')(  {
+    title: 'MNP Status',  // Default title
+    theme: 'default.css',     // Default styles
+    path: '/health-status',
+    spans: [{
+      interval: 1,            // Every second
+      retention: 60           // Keep 60 datapoints in memory
+    }, {
+      interval: 5,            // Every 5 seconds
+      retention: 60
+    }, {
+      interval: 15,           // Every 15 seconds
+      retention: 60
+    }],
+    chartVisibility: {
+      cpu: true,
+      mem: true,
+      load: true,
+      eventLoop: true,
+      heap: true,
+      responseTime: true,
+      rps: true,
+      statusCodes: true
+    },
+    healthChecks: [],
+    ignoreStartsWith: '/admin'
+  }
+))
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
