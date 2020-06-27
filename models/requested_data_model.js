@@ -17,6 +17,10 @@ const requesteddataSchema = new Schema({
   hook_url: {
     type: String
   },
+  ignore_web_hook: {
+    type: Boolean,
+    default: false,
+  },
   status: {
     type: String,
     enum: ['new_request', 'inprogress', 'partial', 'completed', 'error']
@@ -145,6 +149,7 @@ exports.createAsyncRequest = (req) => {
       dispatched_count:0,
       type:'async',
       hook_url: req.body.hook_url || "",
+      ignore_web_hook: !!req.body.ignore_web_hook,
       status: 'new_request'
     }
     const requestedData = new RequestData(reqData);

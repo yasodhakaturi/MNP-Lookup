@@ -33,7 +33,8 @@ const dispatcherService = (job, mnp_data)=>{
             data: data,
             url:url
           };
-          axios(options).then(function (response) {
+
+          let onSucessProcess = () => {
             reqRow.dispatched_count = ((reqRow.dispatched_count || 0) + filteredMnpData.length);
             if(reqRow.dispatched_count < reqRow.received_count){
               reqRow.status = "partial"
@@ -56,9 +57,20 @@ const dispatcherService = (job, mnp_data)=>{
 
               });
             })
-          }).catch(function (err) {
-            console.log('Failed Dispatch Request', err)
-          });
+          };
+
+
+          if(reqRow.ignore_web_hook){
+            console.log('------- ignore web hook request---------')
+            console.log(JSON.stringify(options))
+            onSucessProcess()
+          }else{
+            axios(options).then(function (response) {
+              onSucessProcess()
+            }).catch(function (err) {
+              console.log('Failed Dispatch Request', err)
+            });
+          }
         }
 
       }).catch((err)=>{
