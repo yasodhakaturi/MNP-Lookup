@@ -159,7 +159,7 @@ const batchIdIdentifier = function(){
 const requestLimiter = rateLimit({
   windowMs: 1 * 1000, // 30 sec window
   max: 50, // start 3 blocking after  requests
-  message: {error:"Reached the limit of 5 concurrent requests per user. you use Async Service without a limit on concurrent requests."},
+  message: {error:"Reached the limit of 50 concurrent requests per user. you can use async service without a limit on concurrent requests."},
   keyGenerator: function (req ) {
     return req.user._id;
   },
