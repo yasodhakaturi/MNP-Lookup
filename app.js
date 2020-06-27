@@ -108,7 +108,7 @@ app.use(function(err, req, res, next) {
 
 
 // schedule tasks to be run on the server
-cron.schedule("* * * * *", function() {
+cron.schedule("*/10 * * * * *", function() {
   jobs.requestedDataToQueue('new_request').then((result) =>{
     if(result && result.length){
       console.log("processed queue:", _.map(result, 'mobile_number'))
