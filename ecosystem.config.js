@@ -3,7 +3,7 @@ module.exports = {
     "name": "mnp_lookup_app",
     "script": "./bin/www",
     "node_args": ["--max_old_space_size=1020"],
-    instances : "max",
+    instances : 1,
     exec_mode : "cluster"
   }]
 };

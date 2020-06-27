@@ -248,17 +248,21 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
 
                           }).catch((err)=>{
 
-                              fetcherJob.response = {
-                                status: err.response.status,
-                                response: JSON.stringify({raw: err.response.data || err.response.statusText}),
-                                received_on:Date.now()
-                              };
+                              try{
+                                  fetcherJob.response = {
+                                      status: err.response.status,
+                                      response: JSON.stringify({raw: err.response.data || err.response.statusText}),
+                                      received_on:Date.now()
+                                  };
 
-                              fetcherJob.save().catch((saveerr)=>{
-                                  console.log("Failed to save response",saveerr)
-                              });
+                                  fetcherJob.save().catch((saveerr)=>{
+                                      console.log("Failed to save response",saveerr)
+                                  });
+                                  reject(err);
+                              }catch(e){
+                                  reject(err);
+                              }
 
-                              reject(err);
                           });
                       }
 
