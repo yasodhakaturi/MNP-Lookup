@@ -24,7 +24,9 @@ const responseDataSchema = new Schema({
   },
   received_date: {
     type: Date,
-    default: Date.now()
+    default: function() {
+      return Date.now();
+    }
   }
 });
 

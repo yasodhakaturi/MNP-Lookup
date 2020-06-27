@@ -28,6 +28,13 @@ const requesteddataSchema = new Schema({
     enum: ['sync', 'async'],
     default: 'sync'
   },
+  provider_request:{
+    type:Boolean,
+    default: false
+  },
+  provider_response:{
+    type:String
+  },
   requested_on: {
     type: Date,
     default: function() {
@@ -69,18 +76,25 @@ exports.createSyncRequest = (req) => {
         mnp_response_model.getMNPBYMobileNumber(req.params.mobile_number).then((mnpData)=>{
           if(mnpData.length > 0){
             console.log('found in DB', req.params.mobile_number);
+            requestedData.provider_request = false;
             requestedData.dispatched_count = 1;
             requestedData.status = 'completed';
             requestedData.save();
             resolve(_.castArray(mnpData));
           }else{
             console.log('fetching from provider', req.params.mobile_number);
-            providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
+            providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((resp)=>{
               requestedData.dispatched_count = 1;
+              requestedData.provider_request = true;
+              requestedData.provider_response = JSON.stringify({raw: resp.response});
               requestedData.status = 'completed';
               requestedData.save();
-              resolve(mappedRows);
+              resolve(resp.mappedRows);
             }).catch((err)=>{
+              requestedData.provider_request = true;
+              requestedData.status = 'error';
+              requestedData.provider_response = err.message;
+              requestedData.save();
               err.statusCode = 500
               err.errorMessage = err.message;
               resolve(err);
@@ -90,12 +104,18 @@ exports.createSyncRequest = (req) => {
           console.log("Error at mnp data frm DB for mobile number: " + req.params.mobile_number ,err)
 
           console.log('fetching from provider', req.params.mobile_number)
-          providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((mappedRows)=>{
+          providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((resp)=>{
             requestedData.dispatched_count = 1;
+            requestedData.provider_request = true;
+            requestedData.provider_response = JSON.stringify({raw: resp.response});
             requestedData.status = 'completed';
             requestedData.save();
-            resolve(mappedRows);
+            resolve(resp.mappedRows);
           }).catch((err2)=>{
+            requestedData.provider_request = true;
+            requestedData.status = 'error';
+            requestedData.provider_response = err.message;
+            requestedData.save();
             err2.statusCode = 500
             err2.errorMessage = err.message;
             resolve(err2);

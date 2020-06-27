@@ -68,7 +68,7 @@ const doSyncRequest = (number) => {
 
         if(response.data.results && response.data.results.length > 0){
           mnpMapping.saveMapping(response.data.results).then((mappedRows)=>{
-            resolve(mappedRows)
+            resolve({mappedRows: mappedRows, response:response.data.results})
           }).catch((e)=>{
             reject(e);
           });
