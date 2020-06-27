@@ -158,7 +158,7 @@ const batchIdIdentifier = function(){
 //TODO: skip the count if the requested mobile number data is already exists.
 const requestLimiter = rateLimit({
   windowMs: 1 * 1000, // 30 sec window
-  max: 10, // start 3 blocking after  requests
+  max: 50, // start 3 blocking after  requests
   message: {error:"Reached the limit of 5 concurrent requests per user. you use Async Service without a limit on concurrent requests."},
   keyGenerator: function (req ) {
     return req.user._id;
