@@ -120,7 +120,7 @@ cron.schedule("* * * * *", function() {
 
 
 // schedule tasks to be run on the server
-cron.schedule("*/20 * * * * *", function() {
+cron.schedule("*/5 * * * * *", function() {
   setTimeout(function() {
     jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
       if(result && result.length){
@@ -130,7 +130,7 @@ cron.schedule("*/20 * * * * *", function() {
     }).catch((err)=>{
       console.log(err)
     });
-  }, 10000);
+  }, 2000);
 });
 
 
