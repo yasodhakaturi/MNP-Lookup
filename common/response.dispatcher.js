@@ -39,17 +39,30 @@ const dispatcherService = (job, mnp_data)=>{
             };
 
             let onSucessProcess = () => {
-              reqRow.dispatched_count = ((reqRow.dispatched_count || 0) + filteredMnpData.length);
-              if (reqRow.dispatched_count < reqRow.received_count) {
-                reqRow.status = "partial"
-              } else if (reqRow.dispatched_count == reqRow.received_count) {
-                reqRow.status = "completed"
-              }
-              reqRow.save().then(() => {
-                console.log(`Requests ${batch} status updated`, reqRow.dispatched_count)
-              }).catch((e)=>{
-                console.log(`Requests ${batch} status failed to update`, reqRow.dispatched_count)
-              });
+
+              requested_data_model.model.update(
+                { _id: reqRow._id },
+                { $inc: { dispatched_count: filteredMnpData.length, "status": ((reqRow.dispatched_count == reqRow.received_count) ? 'completed' : 'partial') } },
+                function(err, doc){
+                  if(err){
+                    console.log(`Requests ${batch} status failed to update`, reqRow.dispatched_count, doc)
+                  }else{
+                    console.log(`Requests ${batch} status updated`, reqRow.dispatched_count, doc)
+                  }
+                }
+              )
+
+              // reqRow.dispatched_count = ((reqRow.dispatched_count || 0) + filteredMnpData.length);
+              // if (reqRow.dispatched_count < reqRow.received_count) {
+              //   reqRow.status = "partial"
+              // } else if (reqRow.dispatched_count == reqRow.received_count) {
+              //   reqRow.status = "completed"
+              // }
+              // reqRow.save().then(() => {
+              //   console.log(`Requests ${batch} status updated`, reqRow.dispatched_count)
+              // }).catch((e)=>{
+              //   console.log(`Requests ${batch} status failed to update`, reqRow.dispatched_count)
+              // });
               console.log(`Dispatched ${batch} with ${filteredMnpData.length} numbers`, reqRow.dispatched_count);
 
               processed_data_model.model.updateMany({"mobile_number": {$in: _.map(filteredMnpData, 'mobile_number')}, job_id: job._id}, {"$set":{"status": 'completed'}},
