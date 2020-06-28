@@ -229,12 +229,18 @@ exports.requestedDataToQueue = (status, res) => {
                         if(error){
                             reject(error);
                         }
-                        _.each(result, (row)=>{
-                            if(row.status == 'new_request'){
-                                row.status = 'inprogress';
-                                row.save();
-                            }
-                        })
+                        // _.each(result, (row)=>{
+                        //     if(row.status == 'new_request'){
+                        //         row.status = 'inprogress';
+                        //         row.save();
+                        //     }
+                        // })
+                        requesteddata_model.model.updateMany({"_id": {$in: _.map(result, '_id')}, status: 'new_request'}, {"$set":{"status": 'inprogress'}},
+                          function(error, docs) {
+                              if(error){
+                                  reject(error);
+                              }
+                          });
                         resolve(docs);
                     });
                 }else{
@@ -274,15 +280,23 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                       if(!job.req_payload || job.req_payload.length == 0){
                           reject({"error": "No payload"});
                       }else{
-                          _.each(results, (row)=>{
-                              row.status = 'inprogress';
-                              row.job_id = job._id;
-                              row.save().then((savedRow)=>{
-                                  console.log('Fetcher Data row Status Updated', savedRow.mobile_number)
-                              }).catch((err)=>{
-                                  console.log(err);
-                              });
-                          });
+                          // _.each(results, (row)=>{
+                          //     row.status = 'inprogress';
+                          //     row.job_id = job._id;
+                          //     row.save().then((savedRow)=>{
+                          //         console.log('Fetcher Data row Status Updated', savedRow.mobile_number)
+                          //     }).catch((err)=>{
+                          //         console.log(err);
+                          //     });
+                          // });
+
+                          processeddata_model.model.updateMany({"_id": {$in: _.map(results, '_id')}}, {"$set":{"status": 'inprogress', "job_id":job._id}},
+                            function(error, docs) {
+                                if(error){
+                                    reject(error);
+                                }
+                                console.log('Fetcher Data row Status Updated', _.map(results, 'mobile_number'), docs)
+                            });
                           doBatchRequest(job).then((bRes)=>{
                               resolve(bRes);
                           }).catch((bErr)=>{
