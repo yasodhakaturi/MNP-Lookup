@@ -142,7 +142,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
   cron.schedule("* * * * *", function() {
     setTimeout(function() {
       console.log("triggered leftover jobs")
-      jobs.doBatchRequestByStatus('new',2).then((result) =>{
+      jobs.doBatchRequestByStatus('failed',2).then((result) =>{
           console.log("triggered leftover jobs")
       }).catch((err)=>{
         console.log(err)
