@@ -22,6 +22,7 @@ const mnpRequestsSchema = new Schema({
   response:{
     status: Number,
     response:String,
+    mobile_numbers: Array,
     received_on:Date,
     bulk_id:String
   },
