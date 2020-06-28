@@ -157,6 +157,7 @@ let doBatchRequest = (job) => {
                 job.response = {
                     status: res.status,
                     response: JSON.stringify({raw: res.data || ""}),
+                    mobile_numbers: _.map((res.data && res.data.results) || [] , 'to'),
                     bulk_id: (res.data && res.data.bulkId) || "",
                     received_on: Date.now()
                 };
