@@ -48,7 +48,9 @@ let getMobileIdPairs = (result) => {
         let mobile_id_pairs = [];
         let promises = [];
         _.each(result, (row)=>{
-            let allMobileNumbers = _.uniq(row.requested_data.split(','));
+            let alldata = row.requested_data.split(',');
+            let allMobileNumbers = _.uniq(alldata);
+            console.log("Filter data by uniqueness", alldata.length, allMobileNumbers.length)
             let promise = getMnpCheckup(allMobileNumbers);
             promises.push(promise);
 

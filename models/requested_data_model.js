@@ -141,9 +141,10 @@ exports.createSyncRequest = (req) => {
 
 exports.createAsyncRequest = (req) => {
   return new Promise((resolve, reject) => {
+    let validNumbers = _.uniq(req.processedData.valid || [])
     let reqData = {
-      requested_data:req.processedData.valid.join(','),
-      received_count:req.processedData.valid.length,
+      requested_data:validNumbers.join(','),
+      received_count:validNumbers.length,
       requested_by: req.user,
       requested_ip: req.clientIp,
       dispatched_count:0,
