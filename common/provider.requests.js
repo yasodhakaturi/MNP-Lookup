@@ -24,6 +24,8 @@ const doAsyncRequest = (payload) => {
       url:url
     };
 
+    payload.status = "inprogress";
+    payload.save();
     // console.log('doMnpProviderRequest Trigger', options)
     axios(options).then(function (response) {
       resolve(response);

@@ -216,15 +216,15 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                           providerRequestor.doAsyncMnpRequest(job).then((res)=>{
 
 
-                              fetcherJob.response = {
+                              job.response = {
                                   status: res.status,
                                   response: JSON.stringify({raw: res.data}),
                                   bulk_id: res.data.bulkId || "",
                                   received_on:Date.now()
                               };
-                              fetcherJob.bulk_id = fetcherJob.response.bulk_id;
-                              fetcherJob.status = "requested";
-                              fetcherJob.save().then(()=>{
+                              job.bulk_id = job.response.bulk_id;
+                              job.status = "requested";
+                              job.save().then(()=>{
                                   if(res.data.results && res.data.results.length > 0){
                                       mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
                                           dispatcher.dispatcherService(job, allRows)
@@ -236,6 +236,7 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                                       resolve([])
                                   }
                               }).catch((saveerr)=>{
+
                                   console.log("Failed to save response in fetcherJob",saveerr);
                                   if(res.data.results && res.data.results.length > 0){
                                       mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
@@ -252,13 +253,15 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                           }).catch((err)=>{
 
                               try{
-                                  fetcherJob.response = {
+                                  job.response = {
                                       status: err.response.status,
                                       response: JSON.stringify({raw: err.response.data || err.response.statusText}),
                                       received_on:Date.now()
                                   };
 
-                                  fetcherJob.save().catch((saveerr)=>{
+                                  job.status = "failed";
+
+                                  job.save().catch((saveerr)=>{
                                       console.log("Failed to save response",saveerr)
                                   });
                                   reject(err);
