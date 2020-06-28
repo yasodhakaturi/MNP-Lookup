@@ -80,29 +80,29 @@ let getMobileIdPairs = (result) => {
                             row.save();
                         }
 
-                        // let fetcherJob = {};
-                        //
-                        // fetcherJob.req_ids = _.map(docs, (r) => {
-                        //     return r._id;
-                        // });
-                        //
-                        // fetcherJob.req_payload = _.map(docs, (r) => {
-                        //     return r.mobile_number;
-                        // });
-                        //
-                        // fetcherJob.receive_batch_ids = _.uniqBy(_.map(docs, (r) => {
-                        //     return r.batch_id
-                        // }), (b) => {
-                        //     return b.toString()
-                        // });
-                        //
-                        // fetcherJob.status = 'available';
-                        //
-                        // fetcherJob = new mnp_requests_model.model(fetcherJob);
-                        // // console.log('-------Fetcher Data model-------', fetcherJob)
-                        // fetcherJob.save().then((job) => {
-                        //     dispatcher.dispatcherService(job, checkMobileNumbers.available);
-                        // })
+                        let fetcherJob = {};
+
+                        fetcherJob.req_ids = _.map(docs, (r) => {
+                            return r._id;
+                        });
+
+                        fetcherJob.req_payload = _.map(docs, (r) => {
+                            return r.mobile_number;
+                        });
+
+                        fetcherJob.receive_batch_ids = _.uniqBy(_.map(docs, (r) => {
+                            return r.batch_id
+                        }), (b) => {
+                            return b.toString()
+                        });
+
+                        fetcherJob.status = 'available';
+
+                        fetcherJob = new mnp_requests_model.model(fetcherJob);
+                        // console.log('-------Fetcher Data model-------', fetcherJob)
+                        fetcherJob.save().then((job) => {
+                            dispatcher.dispatcherService(job, checkMobileNumbers.available);
+                        })
                     });
 
                 }
