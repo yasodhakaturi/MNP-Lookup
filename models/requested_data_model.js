@@ -48,6 +48,9 @@ const requesteddataSchema = new Schema({
       return Date.now();
     }
   },
+  completed_on: {
+    type: Date
+  }
 });
 
 const RequestData = mongoose.model('Requests', requesteddataSchema);
@@ -179,6 +182,42 @@ exports.createAsyncRequest = (req) => {
   // const user = new User(userData);
   // return user.save();
 };
+
+exports.createAsyncRequestByNumbers = (numbers) => {
+  return new Promise((resolve, reject) => {
+    let validNumbers = _.uniq(numbers || [])
+    let reqData = {
+      requested_data:validNumbers.join(','),
+      received_count:validNumbers.length,
+      // requested_by: req.user,
+      // requested_ip: req.clientIp,
+      dispatched_count:0,
+      type:'async',
+      hook_url: "",
+      ignore_web_hook: true,
+      status: 'new_request'
+    }
+    const requestedData = new RequestData(reqData);
+    let err = requestedData.validateSync();
+    if(err){
+      console.log("Error at createAsyncRequestByNumbers",err)
+    }
+    if(requestedData){
+      requestedData.save((err, u) => {
+        // if (err) return handleError(err);
+        if (err) {
+          console.log("Error at createAsyncRequestByNumbers requestedData",err)
+          err.statusCode = 500
+          err.errorMessage = err.errmsg;
+          resolve(err);
+        } else {
+          resolve(u);
+        }
+      });
+    }
+
+  });
+}
 
 exports.findByStatus = (statusmode) => {
   return new Promise((resolve, reject) => {

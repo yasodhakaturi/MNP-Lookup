@@ -48,6 +48,12 @@ const userSchema = new Schema({
   allowIpAddress:{
     type: String,
     default: '*'
+  },
+  created_on: {
+    type: Date,
+    default: function() {
+      return Date.now();
+    }
   }
 });
 

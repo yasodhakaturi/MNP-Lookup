@@ -43,10 +43,12 @@ const dispatcherService = (job, mnp_data)=>{
               let dispatched_count = ((reqRow.dispatched_count || 0) + filteredMnpData.length);
               requested_data_model.model.updateOne(
                 { _id: reqRow._id },
-                { $inc: { dispatched_count: filteredMnpData.length },  "status": ((dispatched_count == reqRow.received_count) ? 'completed' : 'partial') },
+                { $inc: { dispatched_count: filteredMnpData.length },
+                  "status": ((dispatched_count == reqRow.received_count) ? 'completed' : 'partial'),
+                  "completed_on": new Date()},
                 function(err, doc){
                   if(err){
-                    console.log(`Requests ${batch} status failed to update`, reqRow.dispatched_count, doc)
+                    console.log(`Requests ${batch} status failed to update`, reqRow.dispatched_count, err)
                   }else{
                     console.log(`Requests ${batch} status updated`, reqRow.dispatched_count, doc)
                   }

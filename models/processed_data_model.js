@@ -20,6 +20,12 @@ const processeddataSchema = new Schema({
   job_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MnpRequests'
+  },
+  requested_on: {
+    type: Date,
+    default: function() {
+      return Date.now();
+    }
   }
 });
 

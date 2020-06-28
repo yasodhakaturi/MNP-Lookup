@@ -11,6 +11,8 @@ var forceSsl = require('express-force-ssl');
 const requestIp = require('request-ip');
 var morgan = require('morgan')
 
+const log_model = require('./models/log_model');
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var apiRouter = require('./routes/api');
@@ -148,6 +150,26 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
         console.log(err)
       });
     }, 500);
+  });
+
+
+// schedule tasks to be run on the server, job for prefill the response from a file
+  cron.schedule("*/5 * * * *", function() {
+    setTimeout(function() {
+      jobs.readFromFileBatch('upload_job.txt',4000).then((result) =>{
+          // console.log(result)
+        if(result.length > 0){
+          jobs.createAsyncBatch(result).then((batch) =>{
+            log_model.log("created a batch" + batch._id, 'message', 'readFromFileBatch')
+            // console.log("created a batch", batch._id)
+          }).catch((err)=>{
+            log_model.log(err, 'error', 'readFromFileBatch')
+          });
+        }
+      }).catch((err)=>{
+        log_model.log(err, 'error', 'readFromFileBatch')
+      });
+    }, 4000);
   });
 
 

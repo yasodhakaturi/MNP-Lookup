@@ -5,11 +5,15 @@ const requesteddata_model = require('../../models/requested_data_model');
 const processeddata_model = require('../../models/processed_data_model');
 const mnp_requests_model = require('../../models/mnp_requests_model');
 const response_data_model = require('../../models/response_data_model');
+const log_model = require('../../models/log_model');
 
 const mnpMapping =  require('../../common/response.mapping');
 const providerRequestor =  require('../../common/provider.requests');
 const dispatcher = require('../../common/response.dispatcher');
 const _ = require('lodash');
+var fs = require('fs');
+const readLastLines = require('read-last-lines');
+
 
 let getMnpCheckup = (allMobileNumbers)=>{
     return new Promise((resolve, reject) => {
@@ -337,4 +341,52 @@ exports.doBatchRequestByStatus = (status, limit) => {
     })
 
 
+}
+
+
+exports.readFromFileBatch = (file, limit) => {
+    return new Promise((resolve, reject) => {
+        let filename = __dirname + '/../../files/'+file
+        readLastLines.read(filename, limit).then((lines) => {
+            var to_vanquish = lines.length;
+            fs.stat(filename, (err, stats) => {
+                if (err) {
+                    log_model.log(JSON.stringify({raw: err}), 'readLastLines - error')
+                };
+                fs.truncate(filename, stats.size - to_vanquish, (err) => {
+                    if (err) {
+                        log_model.log(JSON.stringify({raw: err}), 'readLastLines truncate - error')
+                    };
+                    console.log('File truncated!');
+                })
+            });
+            resolve(_.chain(lines.split('\n')).filter(r => !!r).uniq().value());
+        }).catch((err)=>{
+            reject(err)
+        });
+    });
+}
+
+exports.createAsyncBatch = (numbers) => {
+    return new Promise((resolve, reject) => {
+        let processedData = []
+        _.each(numbers, (number) => {
+            if ((_.startsWith(number, '971') && number.length == 12)) {
+                processedData.push(number);
+            }
+        })
+
+        if (processedData.length > 0) {
+            requesteddata_model.createAsyncRequestByNumbers(processedData)
+              .then((result) => {
+                  if (result.errorMessage) {
+                      reject({error: result.errorMessage})
+                  } else {
+                      resolve(result)
+                  }
+              });
+        } else {
+            reject({error: "no valid data in batch"})
+        }
+    });
 }

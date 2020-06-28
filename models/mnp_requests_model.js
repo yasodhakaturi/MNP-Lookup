@@ -34,6 +34,12 @@ const mnpRequestsSchema = new Schema({
   },
   submitted_date: {
     type: Date
+  },
+  requested_on: {
+    type: Date,
+    default: function() {
+      return Date.now();
+    }
   }
 });
 
