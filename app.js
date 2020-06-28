@@ -124,7 +124,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 
 
 // schedule tasks to be run on the server
-  cron.schedule("*/15 * * * * *", function() {
+  cron.schedule("*/5 * * * * *", function() {
     setTimeout(function() {
       jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
         if(result && result.length){
@@ -134,7 +134,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
       }).catch((err)=>{
         console.log(err)
       });
-    }, 4000);
+    }, 2500);
   });
 
 
