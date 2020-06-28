@@ -216,14 +216,19 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                           providerRequestor.doAsyncMnpRequest(job).then((res)=>{
 
 
-                              job.response = {
-                                  status: res.status,
-                                  response: JSON.stringify({raw: res.data}),
-                                  bulk_id: res.data.bulkId || "",
-                                  received_on:Date.now()
-                              };
-                              job.bulk_id = job.response.bulk_id;
-                              job.status = "requested";
+                              try {
+                                  job.response = {
+                                      status: res.status,
+                                      response: JSON.stringify({raw: res.data || ""}),
+                                      bulk_id: (res.data && res.data.bulkId) || "",
+                                      received_on: Date.now()
+                                  };
+                                  job.bulk_id = job.response.bulk_id;
+                                  job.status = "requested";
+                              }catch(e){
+                                  job.response = "{raw: 'error response'}";
+                                  job.status = "failed";
+                              }
                               job.save().then(()=>{
                                   if(res.data.results && res.data.results.length > 0){
                                       mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
