@@ -46,9 +46,11 @@ const dispatcherService = (job, mnp_data)=>{
                 reqRow.status = "completed"
               }
               reqRow.save().then(() => {
-                console.log(`Requests ${batch} status updated`)
+                console.log(`Requests ${batch} status updated`, reqRow.dispatched_count)
+              }).catch((e)=>{
+                console.log(`Requests ${batch} status failed to update`, reqRow.dispatched_count)
               });
-              console.log(`Dispatched ${batch} with ${filteredMnpData.length} numbers`);
+              console.log(`Dispatched ${batch} with ${filteredMnpData.length} numbers`, reqRow.dispatched_count);
 
               processed_data_model.model.updateMany({"mobile_number": {$in: _.map(filteredMnpData, 'mobile_number')}, job_id: job._id}, {"$set":{"status": 'completed'}},
                 function(error, docs) {
