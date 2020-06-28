@@ -148,6 +148,76 @@ let getMobileIdPairs = (result) => {
     });
 }
 
+let doBatchRequest = (job) => {
+    return new Promise((resolve, reject) => {
+        providerRequestor.doAsyncMnpRequest(job).then((res) => {
+
+
+            try {
+                job.response = {
+                    status: res.status,
+                    response: JSON.stringify({raw: res.data || ""}),
+                    bulk_id: (res.data && res.data.bulkId) || "",
+                    received_on: Date.now()
+                };
+                job.bulk_id = job.response.bulk_id;
+                job.status = "requested";
+            } catch (e) {
+                job.response = "{raw: 'error response'}";
+                job.status = "failed";
+            }
+            job.save().then(() => {
+                if (res.data.results && res.data.results.length > 0) {
+                    mnpMapping.saveMapping(res.data.results, job).then((allRows) => {
+                        dispatcher.dispatcherService(job, allRows)
+                        resolve(allRows);
+                    }).catch((err) => {
+                        reject(err);
+                    })
+                } else {
+                    resolve([])
+                }
+            }).catch((saveerr) => {
+
+                console.log("Failed to save response in fetcherJob", saveerr);
+                if (res.data.results && res.data.results.length > 0) {
+                    mnpMapping.saveMapping(res.data.results, job).then((allRows) => {
+                        dispatcher.dispatcherService(job, allRows)
+                        resolve(allRows);
+                    }).catch((err) => {
+                        reject(err);
+                    })
+                } else {
+                    resolve([])
+                }
+            });
+
+        }).catch((err) => {
+
+            try {
+                job.response = {
+                    status: _.get(err, ['response', 'status'], err.toString() || "failed with error"),
+                    response: JSON.stringify({raw: _.get(err, ['response', 'data'], _.get(err, ['response', 'statusText'], "some error"))}),
+                    received_on: Date.now()
+                };
+
+                job.status = "failed";
+
+                job.save().catch((saveerr) => {
+                    console.log("Failed to save response", saveerr)
+                });
+                reject(err);
+            } catch (e) {
+                job.status = "failed";
+                job.save();
+
+                reject(err);
+            }
+
+        });
+    })
+}
+
 exports.requestedDataToQueue = (status, res) => {
     return new Promise((resolve, reject) => {
         requesteddata_model.findByStatus(status)
@@ -212,68 +282,10 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                                   console.log(err);
                               });
                           });
-
-                          providerRequestor.doAsyncMnpRequest(job).then((res)=>{
-
-
-                              try {
-                                  job.response = {
-                                      status: res.status,
-                                      response: JSON.stringify({raw: res.data || ""}),
-                                      bulk_id: (res.data && res.data.bulkId) || "",
-                                      received_on: Date.now()
-                                  };
-                                  job.bulk_id = job.response.bulk_id;
-                                  job.status = "requested";
-                              }catch(e){
-                                  job.response = "{raw: 'error response'}";
-                                  job.status = "failed";
-                              }
-                              job.save().then(()=>{
-                                  if(res.data.results && res.data.results.length > 0){
-                                      mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
-                                          dispatcher.dispatcherService(job, allRows)
-                                          resolve(allRows);
-                                      }).catch((err)=>{
-                                          reject(err);
-                                      })
-                                  }else{
-                                      resolve([])
-                                  }
-                              }).catch((saveerr)=>{
-
-                                  console.log("Failed to save response in fetcherJob",saveerr);
-                                  if(res.data.results && res.data.results.length > 0){
-                                      mnpMapping.saveMapping(res.data.results, job).then((allRows)=>{
-                                          dispatcher.dispatcherService(job, allRows)
-                                          resolve(allRows);
-                                      }).catch((err)=>{
-                                          reject(err);
-                                      })
-                                  }else{
-                                      resolve([])
-                                  }
-                              });
-
-                          }).catch((err)=>{
-
-                              try{
-                                  job.response = {
-                                      status: err.response.status,
-                                      response: JSON.stringify({raw: err.response.data || err.response.statusText}),
-                                      received_on:Date.now()
-                                  };
-
-                                  job.status = "failed";
-
-                                  job.save().catch((saveerr)=>{
-                                      console.log("Failed to save response",saveerr)
-                                  });
-                                  reject(err);
-                              }catch(e){
-                                  reject(err);
-                              }
-
+                          doBatchRequest(job).then((bRes)=>{
+                              resolve(bRes);
+                          }).catch((bErr)=>{
+                              reject(bErr)
                           });
                       }
 
@@ -293,3 +305,18 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
         });
     })
 };
+
+exports.doBatchRequestByStatus = (status, limit) => {
+    return new Promise((resolve, reject) => {
+        mnp_requests_model.findByStatus(status, limit).then((result) => {
+            _.each(result, (job)=>{
+                doBatchRequest(job)
+            })
+            resolve({});
+        }).catch((err)=>{
+            reject(err)
+        });
+    })
+
+
+}

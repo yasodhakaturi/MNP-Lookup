@@ -53,3 +53,11 @@ exports.getBatchStatusDetails = (batch) => {
     //
   })
 }
+exports.findByStatus = (status, limit) => {
+  return new Promise((resolve, reject) => {
+    MNPRequestData.find({status:status}).limit(parseInt(limit)).exec( function (err, results) {
+      if (err) reject(err);
+      resolve(results);
+    });
+  })
+}

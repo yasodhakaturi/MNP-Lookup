@@ -27,7 +27,9 @@ const doAsyncRequest = (payload) => {
     payload.status = "inprogress";
     payload.save();
     // console.log('doMnpProviderRequest Trigger', options)
+    // console.log("request id: ", payload._id)
     axios(options).then(function (response) {
+      // console.log("response received: ", response)
       resolve(response);
     }).catch(function (err) {
       console.log('doMnpProviderRequest Request Failed', err)

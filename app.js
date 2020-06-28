@@ -138,6 +138,19 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
   });
 
 
+// schedule tasks to be run on the server
+  cron.schedule("* * * * *", function() {
+    setTimeout(function() {
+      console.log("triggered leftover jobs")
+      jobs.doBatchRequestByStatus('new',2).then((result) =>{
+          console.log("triggered leftover jobs")
+      }).catch((err)=>{
+        console.log(err)
+      });
+    }, 500);
+  });
+
+
 }
 
 
