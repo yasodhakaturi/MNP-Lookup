@@ -112,7 +112,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 
   console.log('Configured Jobs in Main Cluster', process.env.NODE_APP_INSTANCE)
 // schedule tasks to be run on the server
-  cron.schedule("*/10 * * * * *", function() {
+  cron.schedule("* * * * *", function() {
     jobs.requestedDataToQueue('new_request').then((result) =>{
       if(result && result.length){
         console.log("processed queue:", _.map(result, 'mobile_number'))
@@ -124,7 +124,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 
 
 // schedule tasks to be run on the server
-  cron.schedule("*/5 * * * * *", function() {
+  cron.schedule("*/15 * * * * *", function() {
     setTimeout(function() {
       jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
         if(result && result.length){
@@ -134,7 +134,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
       }).catch((err)=>{
         console.log(err)
       });
-    }, 2000);
+    }, 4000);
   });
 
 

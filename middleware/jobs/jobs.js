@@ -203,16 +203,18 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                       if(!job.req_payload || job.req_payload.length == 0){
                           reject({"error": "No payload"});
                       }else{
-                          providerRequestor.doAsyncMnpRequest(job).then((res)=>{
-                              _.each(results, (row)=>{
-                                  row.status = 'inprogress';
-                                  row.job_id = job._id;
-                                  row.save().then((savedRow)=>{
-                                      console.log('Fetcher Data row Status Updated', savedRow.mobile_number)
-                                  }).catch((err)=>{
-                                      console.log(err);
-                                  });
+                          _.each(results, (row)=>{
+                              row.status = 'inprogress';
+                              row.job_id = job._id;
+                              row.save().then((savedRow)=>{
+                                  console.log('Fetcher Data row Status Updated', savedRow.mobile_number)
+                              }).catch((err)=>{
+                                  console.log(err);
                               });
+                          });
+
+                          providerRequestor.doAsyncMnpRequest(job).then((res)=>{
+
 
                               fetcherJob.response = {
                                   status: res.status,
