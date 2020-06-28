@@ -25,7 +25,10 @@ const requesteddataSchema = new Schema({
     type: String,
     enum: ['new_request', 'inprogress', 'partial', 'completed', 'error']
   },
-  dispatched_count:Number,
+  dispatched_count:{
+    type: Number,
+    default: 0
+  },
   received_count:Number,
   type: {
     type: String,
