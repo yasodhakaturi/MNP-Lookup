@@ -25,16 +25,27 @@ const doAsyncRequest = (payload) => {
     };
 
     payload.status = "inprogress";
-    payload.save();
-    // console.log('doMnpProviderRequest Trigger', options)
-    // console.log("request id: ", payload._id)
-    axios(options).then(function (response) {
-      // console.log("response received: ", response)
-      resolve(response);
-    }).catch(function (err) {
-      console.log('doMnpProviderRequest Request Failed', err)
-      reject(err);
+    payload.save().then(()=>{
+      // console.log('doMnpProviderRequest Trigger', options)
+      // console.log("request id: ", payload._id)
+      axios(options).then(function (response) {
+        // console.log("response received: ", response)
+        resolve(response);
+      }).catch(function (err) {
+        console.log('doMnpProviderRequest Request Failed', err)
+        payload.status = "failed";
+        payload.save().then(()=>{
+          reject(err);
+        }).catch((e)=>{
+          reject(err);
+        })
+
+      });
+    }).catch((saveerr) => {
+      console.log("Failed to save response", saveerr)
+      reject(saveerr);
     });
+
   })
 }
 
