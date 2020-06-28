@@ -156,19 +156,22 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 // schedule tasks to be run on the server, job for prefill the response from a file
   cron.schedule("*/5 * * * *", function() {
     setTimeout(function() {
-      jobs.readFromFileBatch('upload_job.txt',4000).then((result) =>{
+      if(ENV.PREFILL_FILENAME && ENV.PREFILL_LIMIT){
+        jobs.readFromFileBatch(ENV.PREFILL_FILENAME, ENV.PREFILL_LIMIT).then((result) =>{
           // console.log(result)
-        if(result.length > 0){
-          jobs.createAsyncBatch(result).then((batch) =>{
-            log_model.log("created a batch" + batch._id, 'message', 'readFromFileBatch')
-            // console.log("created a batch", batch._id)
-          }).catch((err)=>{
-            log_model.log(err, 'error', 'readFromFileBatch')
-          });
-        }
-      }).catch((err)=>{
-        log_model.log(err, 'error', 'readFromFileBatch')
-      });
+          if(result.length > 0){
+            jobs.createAsyncBatch(result).then((batch) =>{
+              log_model.log("created a batch" + batch._id, 'message', 'readFromFileBatch')
+              // console.log("created a batch", batch._id)
+            }).catch((err)=>{
+              log_model.log(err, 'error', 'readFromFileBatch')
+            });
+          }
+        }).catch((err)=>{
+          log_model.log(err, 'error', 'readFromFileBatch')
+        });
+      }
+
     }, 4000);
   });
 

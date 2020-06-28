@@ -17,4 +17,6 @@ module.exports = {
   SSL_PRIVATE_KEY: process.env.SSL_PRIVATE_KEY || '',
   SSL_PRIVATE_CRT: process.env.SSL_PRIVATE_CRT || '',
   SSL_INTERMEDIATE_CRT: process.env.SSL_INTERMEDIATE_CRT || '',
+  PREFILL_FILENAME: process.env.PREFILL_FILENAME || '',
+  PREFILL_LIMIT: process.env.PREFILL_LIMIT || 4000,
 };
