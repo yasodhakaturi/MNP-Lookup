@@ -106,32 +106,39 @@ app.use(function(err, req, res, next) {
 });
 
 
+let isMainCluster = parseInt(process.env.NODE_APP_INSTANCE) === 0;
 
+if (isMainCluster || ENV.NODE_ENV === 'development') {
+
+  console.log('Configured Jobs in Main Cluster', process.env.NODE_APP_INSTANCE)
 // schedule tasks to be run on the server
-cron.schedule("*/10 * * * * *", function() {
-  jobs.requestedDataToQueue('new_request').then((result) =>{
-    if(result && result.length){
-      console.log("processed queue:", _.map(result, 'mobile_number'))
-    }
-  }).catch((err)=>{
-    console.log(err)
-  });
-});
-
-
-// schedule tasks to be run on the server
-cron.schedule("*/5 * * * * *", function() {
-  setTimeout(function() {
-    jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
+  cron.schedule("*/10 * * * * *", function() {
+    jobs.requestedDataToQueue('new_request').then((result) =>{
       if(result && result.length){
-        // console.log("fetch requested:", _.map(result, (r)=>{ return r.get('msisdn')}))
-        console.log("fetch requested:", _.map(result, 'mobile_number'))
+        console.log("processed queue:", _.map(result, 'mobile_number'))
       }
     }).catch((err)=>{
       console.log(err)
     });
-  }, 2000);
-});
+  });
+
+
+// schedule tasks to be run on the server
+  cron.schedule("*/5 * * * * *", function() {
+    setTimeout(function() {
+      jobs.requestedQueueToFetcher('new_request', parseInt(ENV.FETCH_SIZE || 10)).then((result) =>{
+        if(result && result.length){
+          // console.log("fetch requested:", _.map(result, (r)=>{ return r.get('msisdn')}))
+          console.log("fetch requested:", _.map(result, 'mobile_number'))
+        }
+      }).catch((err)=>{
+        console.log(err)
+      });
+    }, 2000);
+  });
+
+
+}
 
 
 module.exports = app;
