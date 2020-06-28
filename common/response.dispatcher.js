@@ -40,7 +40,7 @@ const dispatcherService = (job, mnp_data)=>{
 
             let onSucessProcess = () => {
 
-              requested_data_model.model.update(
+              requested_data_model.model.updateOne(
                 { _id: reqRow._id },
                 { $inc: { dispatched_count: filteredMnpData.length },  "status": ((reqRow.dispatched_count == reqRow.received_count) ? 'completed' : 'partial') },
                 function(err, doc){
