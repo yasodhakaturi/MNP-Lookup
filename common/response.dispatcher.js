@@ -50,20 +50,27 @@ const dispatcherService = (job, mnp_data)=>{
               });
               console.log(`Dispatched ${batch} with ${filteredMnpData.length} numbers`);
 
-              _.each(filteredMnpData, (mnp_data) => {
-                processed_data_model.model.findOne({
-                  "mobile_number": mnp_data.mobile_number,
-                  job_id: job._id
-                }).then((prow) => {
-                  if (prow) {
-                    prow.status = "completed"
-                    prow.save().then(() => {
-                      console.log('processed queue row status');
-                    })
+              processed_data_model.model.updateMany({"mobile_number": {$in: _.map(filteredMnpData, 'mobile_number')}, job_id: job._id}, {"$set":{"status": 'completed'}},
+                function(error, docs) {
+                  if(error){
+                    console.log('processed queue row status', _.map(filteredMnpData, 'mobile_number'), docs);
                   }
-
+                  console.log('processed queue row status', _.map(filteredMnpData, 'mobile_number'), docs);
                 });
-              })
+              // _.each(filteredMnpData, (mnp_data) => {
+              //   processed_data_model.model.findOne({
+              //     "mobile_number": mnp_data.mobile_number,
+              //     job_id: job._id
+              //   }).then((prow) => {
+              //     if (prow) {
+              //       prow.status = "completed"
+              //       prow.save().then(() => {
+              //         console.log('processed queue row status');
+              //       })
+              //     }
+              //
+              //   });
+              // })
             };
 
 

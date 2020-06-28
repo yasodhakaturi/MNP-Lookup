@@ -238,8 +238,9 @@ exports.requestedDataToQueue = (status, res) => {
                         requesteddata_model.model.updateMany({"_id": {$in: _.map(result, '_id')}, status: 'new_request'}, {"$set":{"status": 'inprogress'}},
                           function(error, docs) {
                               if(error){
-                                  reject(error);
+                                  console.log("failed to update status", _.map(result, '_id'), error)
                               }
+                              console.log("update status", _.map(result, '_id'), docs)
                           });
                         resolve(docs);
                     });
@@ -293,7 +294,7 @@ exports.requestedQueueToFetcher = (status, limit, res) => {
                           processeddata_model.model.updateMany({"_id": {$in: _.map(results, '_id')}}, {"$set":{"status": 'inprogress', "job_id":job._id}},
                             function(error, docs) {
                                 if(error){
-                                    reject(error);
+                                    console.log(error);
                                 }
                                 console.log('Fetcher Data row Status Updated', _.map(results, 'mobile_number'), docs)
                             });
