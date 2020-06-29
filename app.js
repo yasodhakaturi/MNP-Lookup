@@ -143,7 +143,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 // schedule tasks to be run on the server
   cron.schedule("* * * * *", function() {
     setTimeout(function() {
-      console.log("triggered leftover jobs")
+
       jobs.doBatchRequestByStatus('failed',2).then((result) =>{
           console.log("triggered leftover jobs")
       }).catch((err)=>{
@@ -156,6 +156,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 // schedule tasks to be run on the server, job for prefill the response from a file
   cron.schedule("*/5 * * * *", function() {
     setTimeout(function() {
+      console.log("batch prefill job")
       if(ENV.PREFILL_FILENAME && ENV.PREFILL_LIMIT){
         jobs.readFromFileBatch(ENV.PREFILL_FILENAME, ENV.PREFILL_LIMIT).then((result) =>{
           console.log(result)
