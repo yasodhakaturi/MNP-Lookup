@@ -360,8 +360,7 @@ exports.readFromFileBatch = (file, limit) => {
                     console.log('File truncated!');
                 })
             });
-            console.log(lines);
-            resolve(_.chain(lines.split('\n')).filter(r => !!r).uniq().value());
+            resolve(_.chain(lines.split('\n')).filter(r => !!r).map(r => r.replace(/(\r\n|\n|\r)/gm, "")).uniq().value());
         }).catch((err)=>{
             reject(err)
         });

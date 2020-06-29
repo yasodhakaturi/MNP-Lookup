@@ -159,7 +159,7 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
       console.log("batch prefill job")
       if(ENV.PREFILL_FILENAME && ENV.PREFILL_LIMIT){
         jobs.readFromFileBatch(ENV.PREFILL_FILENAME, ENV.PREFILL_LIMIT).then((result) =>{
-          console.log(result)
+          console.log('trucated lines', result)
           if(result.length > 0){
             jobs.createAsyncBatch(result).then((batch) =>{
               log_model.log("created a batch" + batch._id, 'message', 'readFromFileBatch')
