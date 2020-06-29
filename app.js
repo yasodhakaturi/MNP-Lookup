@@ -155,10 +155,16 @@ if (isMainCluster || ENV.NODE_ENV === 'development') {
 
 // schedule tasks to be run on the server, job for prefill the response from a file
   cron.schedule("*/5 * * * *", function() {
+    let dt = new Date();
+    let hr = dt.getUTCHours();
+    let limit = parseInt(ENV.PREFILL_LIMIT)
+    if(hr < 19 && hr > 1){
+      limit = limit / 4;
+    }
     setTimeout(function() {
-      console.log("batch prefill job")
+      console.log("batch backfill job")
       if(ENV.PREFILL_FILENAME && ENV.PREFILL_LIMIT){
-        jobs.readFromFileBatch(ENV.PREFILL_FILENAME, ENV.PREFILL_LIMIT).then((result) =>{
+        jobs.readFromFileBatch(ENV.PREFILL_FILENAME, +limit).then((result) =>{
           // console.log('trucated lines', result)
           if(result.length > 0){
             jobs.createAsyncBatch(result).then((batch) =>{
