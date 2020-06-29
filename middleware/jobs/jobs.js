@@ -386,7 +386,7 @@ exports.createAsyncBatch = (numbers) => {
                   }
               });
         } else {
-            console.log(numbers)
+            // console.log(numbers)
             reject({error: "no valid data in batch"})
         }
     });
