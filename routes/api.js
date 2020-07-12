@@ -6,9 +6,10 @@ const rateLimit = require("express-rate-limit");
 var ipRangeCheck = require("ip-range-check");
 var io = require('@pm2/io')
 var meter = io.meter({
-  name      : 'req/min',
+  name      : 'avg req/min',
   samples   : 1,
-  timeframe : 60
+  timeframe : 60,
+  measurement : 'mean'
 })
 
 const UserModel = require('../models/users_model');
