@@ -4,13 +4,13 @@ const uuidAPIKey = require('uuid-apikey');
 const _ = require('lodash');
 const rateLimit = require("express-rate-limit");
 var ipRangeCheck = require("ip-range-check");
-var io = require('@pm2/io')
-var meter = io.meter({
-  name      : 'avg req/min',
-  samples   : 1,
-  timeframe : 60,
-  measurement : 'mean'
-})
+// var io = require('@pm2/io')
+// var meter = io.meter({
+//   name      : 'avg req/min',
+//   samples   : 1,
+//   timeframe : 60,
+//   measurement : 'mean'
+// })
 
 const UserModel = require('../models/users_model');
 const RequestDataModel = require('../models/requested_data_model');
@@ -29,7 +29,7 @@ passport.use(new HeaderAPIKeyStrategy(
   { header: 'Authorization', prefix: 'Api-Key ' },
   false,
   function(apikey, done) {
-    meter.mark();
+    // meter.mark();
     UserModel.model.findOne({ apikey: apikey }, function (err, user) {
       if (err) { return done(err); }
       if (!user) { return done(null, false); }
