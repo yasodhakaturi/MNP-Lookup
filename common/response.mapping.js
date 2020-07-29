@@ -23,8 +23,8 @@ class ResponseSchema{
     this.isvalid = isvalid == 0 ? ((_.get(res, ['status','groupName']) == "REJECTED") ? false : true)
                                 : (isvalid == 1 ? false : !_.get(res, ['error','permanent']));
 
-    this.errorcode = _.get(res, ['error','groupName'], "");
-    this.errorstatus = _.get(res, ['error','name'], "");
+    this.errorcode = !isvalid && (_.get(res, ['status','groupName']) == "REJECTED") ? "HANDSET_ERRORS" : _.get(res, ['error','groupName'], "");
+    this.errorstatus = !isvalid && (_.get(res, ['status','groupName']) == "REJECTED") ? "EC_OR_POTENTIALVERSIONINCOMPATIBILITY" : _.get(res, ['error','name'], "");
   }
 }
 
