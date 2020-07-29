@@ -20,7 +20,11 @@ class ResponseSchema{
     this.isroaming = _.get(res, ['roaming'], "");
 
     let isvalid = _.get(res, ['error','groupId'], "") ;
-    this.isvalid = isvalid == 0 ? true : isvalid == 1 ? false : !_.get(res, ['error','permanent'])
+    this.isvalid = isvalid == 0 ? ((_.get(res, ['status','groupName']) == "REJECTED" &&
+                                    (_.get(res, ['status','name']) == "REJECTED_DESTINATION"
+                                        || _.get(res, ['status','name']) == "REJECTED_NETWORK"))
+                                              ? false : true)
+                                : (isvalid == 1 ? false : !_.get(res, ['error','permanent']));
 
     this.errorcode = _.get(res, ['error','groupName'], "");
     this.errorstatus = _.get(res, ['error','name'], "");
