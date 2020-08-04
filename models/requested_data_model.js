@@ -84,16 +84,16 @@ exports.createSyncRequest = (req) => {
         // if found send the same response if not fetch from provider.
 
         mnp_response_model.getMNPBYMobileNumber(req.params.mobile_number).then((mnpData)=>{
-          if(mnpData.length > 0){
+          if (mnpData.length > 0 && !_.get(req, ['query', 'ignoreCache'], false)) {
             console.log('found in DB', req.params.mobile_number);
             requestedData.provider_request = false;
             requestedData.dispatched_count = 1;
             requestedData.status = 'completed';
             requestedData.save();
             resolve(_.castArray(mnpData));
-          }else{
+          } else {
             console.log('fetching from provider', req.params.mobile_number);
-            providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((resp)=>{
+            providerRequestor.doSyncMnpRequest(req.params.mobile_number).then((resp) => {
               requestedData.dispatched_count = 1;
               requestedData.provider_request = true;
               requestedData.provider_response = JSON.stringify({raw: resp.response});
