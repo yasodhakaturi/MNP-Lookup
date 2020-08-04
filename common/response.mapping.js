@@ -6,25 +6,27 @@ class ResponseSchema{
     this.msisdn = _.get(res, ['to'], "");
     this.mccmnc = _.get(res, ['mccMnc'], "");
     this.mcc = this.mccmnc.substr(0,3);
-    this.mnc = this.mccmnc.substr( -2);
+    this.mnc = this.mccmnc.substr(-2);
     this.imsi = _.get(res, ['imsi'], "");
 
-    this.subscribercode = _.get(res, ['status','groupName'], "");
-    this.subscriberstatus = _.get(res, ['status','name'], "");
-    this.originalnetworkname = _.get(res, ['originalNetwork','networkName'], "");
-    this.orignalcountryname = _.get(res, ['originalNetwork','countryName'], "");
-    this.orignalcountryprefix = _.get(res, ['originalNetwork','countryPrefix'], "");
-    this.orignalnetworkprefix = _.get(res, ['originalNetwork','networkPrefix'], "");
+    this.subscribercode = _.get(res, ['status', 'groupName'], "");
+    this.subscriberstatus = _.get(res, ['status', 'name'], "");
+    this.originalnetworkname = _.get(res, ['originalNetwork', 'networkName'], "");
+    this.orignalcountryname = _.get(res, ['originalNetwork', 'countryName'], "");
+    this.orignalcountryprefix = _.get(res, ['originalNetwork', 'countryPrefix'], "");
+    this.orignalnetworkprefix = _.get(res, ['originalNetwork', 'networkPrefix'], "");
 
-    this.isported = _.get(res, ['ported'], "");
-    this.isroaming = _.get(res, ['roaming'], "");
+    this.isported = _.get(res, ['ported'], false);
+    this.isroaming = _.get(res, ['roaming'], false);
 
-    let isvalid = _.get(res, ['error','groupId'], "") ;
-    this.isvalid = isvalid == 0 ? ((_.get(res, ['status','groupName']) == "REJECTED") ? false : true)
-                                : (isvalid == 1 ? false : !_.get(res, ['error','permanent']));
-
-    this.errorcode = (!isvalid && (_.get(res, ['status','groupName']) == "REJECTED")) ? "HANDSET_ERRORS" : _.get(res, ['error','groupName'], "");
-    this.errorstatus = (!isvalid && (_.get(res, ['status','groupName']) == "REJECTED")) ? "EC_OR_POTENTIALVERSIONINCOMPATIBILITY" : _.get(res, ['error','name'], "");
+    let isvalid = _.get(res, ['error', 'groupId'], false);
+    this.isvalid = isvalid == 0 ? ((_.get(res, ['status', 'groupName']) == "REJECTED") ? false : true)
+      : (isvalid == 1 ? false : !_.get(res, ['error', 'permanent']));
+    if (_.get(res, ['status', 'errorMessage'], false)) {
+      this.errormessage = _.get(res, ['status', 'errorMessage'])
+    }
+    this.errorcode = (!isvalid && (_.get(res, ['status', 'groupName']) == "REJECTED")) ? "HANDSET_ERRORS" : _.get(res, ['error', 'groupName'], "");
+    this.errorstatus = (!isvalid && (_.get(res, ['status', 'groupName']) == "REJECTED")) ? "EC_OR_POTENTIALVERSIONINCOMPATIBILITY" : _.get(res, ['error', 'name'], "");
   }
 }
 
@@ -62,4 +64,9 @@ const saveMapping = (results, job) => {
   });
 }
 
+const errorModel = (error) => {
+  return new ResponseSchema(error);
+}
+
 exports.saveMapping = saveMapping;
+exports.errorModel = errorModel;

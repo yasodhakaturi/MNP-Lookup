@@ -46,11 +46,32 @@ const requestDataValidator = function (options) {
 
     if(!req.body.numbers || req.body.numbers.length == 0){
       // no numbers requested
-      req.processedData.error = {"statusCode": 422, error: "Wrong data: No numbers found"}
-    }else if(!_.isArray(req.body.numbers)){
-      req.processedData.error = {"statusCode": 422, error: "Wrong data: Numbers should be in a array"}
-    }else if(!req.body.hook_url){
-      req.processedData.error = {"statusCode": 422, error: "Wrong data: No web hook URL found"}
+      // req.processedData.error = {"statusCode": 422, error: "Wrong data: No numbers found"}
+      let invalidResponse = mnpResponseMapping.errorModel({
+        status: {
+          groupName: "REJECTED",
+          errorMessage: "Wrong data: No numbers found"
+        }
+      });
+      req.processedData.error = {"statusCode": 422, error: invalidResponse}
+    }else if(!_.isArray(req.body.numbers)) {
+      // req.processedData.error = {"statusCode": 422, error: "Wrong data: Numbers should be in a array"}
+      let invalidResponse = mnpResponseMapping.errorModel({
+        status: {
+          groupName: "REJECTED",
+          errorMessage: "Wrong data: Numbers should be in a array"
+        }
+      });
+      req.processedData.error = {"statusCode": 422, error: invalidResponse}
+    }else if(!req.body.hook_url) {
+      // req.processedData.error = {"statusCode": 422, error: "Wrong data: No web hook URL found"}
+      let invalidResponse = mnpResponseMapping.errorModel({
+        status: {
+          groupName: "REJECTED",
+          errorMessage: "Wrong data: No web hook URL found"
+        }
+      });
+      req.processedData.error = {"statusCode": 422, error: invalidResponse}
     }else{
       _.each(req.body.numbers, (number)=>{
         if((_.startsWith(number, '971') && number.length == 12)){
@@ -59,11 +80,18 @@ const requestDataValidator = function (options) {
           req.processedData.invalid.push(number);
         }
       })
-      if(req.processedData.valid && req.processedData.valid.length == 0){
-        req.processedData.error = {"statusCode": 422, error: "Wrong data: No valid numbers found"}
-      // }else if(req.processedData.valid && req.processedData.valid.length > 1 && !req.body.hook_url){
-      //   //when no web hook found in request
-      //   req.processedData.error = {"statusCode": 422, error: "Wrong data: No hook URL found"}
+      if(req.processedData.valid && req.processedData.valid.length == 0) {
+        let invalidResponse = mnpResponseMapping.errorModel({
+          status: {
+            groupName: "REJECTED",
+            errorMessage: "Wrong data: No valid numbers found"
+          }
+        });
+        req.processedData.error = {"statusCode": 422, error: invalidResponse}
+        // req.processedData.error = {"statusCode": 422, error: "Wrong data: No valid numbers found"}
+        // }else if(req.processedData.valid && req.processedData.valid.length > 1 && !req.body.hook_url){
+        //   //when no web hook found in request
+        //   req.processedData.error = {"statusCode": 422, error: "Wrong data: No hook URL found"}
       }
     }
 
@@ -89,8 +117,10 @@ const trailValidateCountUpdate = function(type){
             if(allowedLimit < (currentRequestNumbers + requestedCount)){
               req.processedData.error = {"statusCode": 403, error: "Trail Limit reached, please contact administrator."}
             }
-          }else{
-            req.processedData.error = {"statusCode": 422, error: "Invalid mobile number"}
+          }else {
+            // req.processedData.error = {"statusCode": 422, error: "Invalid mobile number"}
+            let invalidResponse = mnpResponseMapping.errorModel({status: {groupName: "REJECTED"}});
+            req.processedData.error = {"statusCode": 422, error: invalidResponse}
           }
         }else if(type == 'ASYNC'){
           currentRequestNumbers = req.processedData.valid.length;
@@ -108,8 +138,10 @@ const trailValidateCountUpdate = function(type){
             if(allowedLimit < (currentRequestNumbers + requestedCount)){
               req.processedData.error = {"statusCode": 403, error: "Requests limit reached, please contact administrator."}
             }
-          }else{
-            req.processedData.error = {"statusCode": 422, error: "Invalid mobile number"}
+          }else {
+            // req.processedData.error = {"statusCode": 422, error: "Invalid mobile number"}
+            let invalidResponse = mnpResponseMapping.errorModel({status: {groupName: "REJECTED"}});
+            req.processedData.error = {"statusCode": 422, error: invalidResponse}
           }
         }else if(type == 'ASYNC'){
           currentRequestNumbers = req.processedData.valid.length;
@@ -206,9 +238,14 @@ router.post('/MNP-Lookup',
     if(!req.isIpAllowed){
       res.status(403);
       res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
-    }else if(req.processedData.error){
+    }else if(req.processedData.error) {
       res.status(req.processedData.error.statusCode);
-      res.json({status:"error", message: req.processedData.error.error});
+
+      if (req.processedData.error.statusCode == 422) {
+        res.json(req.processedData.error.error);
+      } else {
+        res.json({status: "error", message: req.processedData.error.error});
+      }
     }else{
       // res.json({status:"Success", batch_id: 'Batch Id', valid_numbers: req.processedData.valid, invalid_numbers: req.processedData.invalid});
       // RequestDataModel
@@ -237,9 +274,13 @@ router.get('/MNP-Lookup/:mobile_number',
     if(!req.isIpAllowed){
       res.status(403);
       res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
-    }if(req.processedData.error){
+    }if(req.processedData.error) {
       res.status(req.processedData.error.statusCode);
-      res.json({status:"error", message: req.processedData.error.error});
+      if (req.processedData.error.statusCode == 422) {
+        res.json(req.processedData.error.error);
+      } else {
+        res.json({status: "error", message: req.processedData.error.error});
+      }
     }else if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
       RequestDataModel.createSyncRequest(req)
         .then((result) => {
@@ -256,9 +297,11 @@ router.get('/MNP-Lookup/:mobile_number',
             req.user.save();
           }
         });
-    }else{
+    }else {
       res.status(422);
-      res.json({status:"error", message: "Invalid mobile number"});
+      // invalid mobile number
+      let invalidResponse = mnpResponseMapping.errorModel({status: {groupName: "REJECTED"}});
+      res.json(invalidResponse);
     }
   });
 
