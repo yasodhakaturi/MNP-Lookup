@@ -239,11 +239,16 @@ router.post('/MNP-Lookup',
       res.status(403);
       res.json({status:"error", message: 'Not allowed, IP mismatch, please contact our administrator.'});
     }else if(req.processedData.error) {
-      res.status(req.processedData.error.statusCode);
-
       if (req.processedData.error.statusCode == 422) {
-        res.json(req.processedData.error.error);
+        res.status(200);
+        res.json({
+          status: "error",
+          results: {
+            "mnp_data": [req.processedData.error.error]
+          }
+        });
       } else {
+        res.status(req.processedData.error.statusCode);
         res.json({status: "error", message: req.processedData.error.error});
       }
     }else{
@@ -277,8 +282,16 @@ router.get('/MNP-Lookup/:mobile_number',
     }if(req.processedData.error) {
       res.status(req.processedData.error.statusCode);
       if (req.processedData.error.statusCode == 422) {
-        res.json(req.processedData.error.error);
+
+        res.status(200);
+        res.json({
+          status: "error",
+          results: {
+            "mnp_data": [req.processedData.error.error]
+          }
+        });
       } else {
+        res.json(req.processedData.error.error);
         res.json({status: "error", message: req.processedData.error.error});
       }
     }else if(req.params.mobile_number && (_.startsWith(req.params.mobile_number, '971') && req.params.mobile_number.length == 12)){
@@ -298,10 +311,11 @@ router.get('/MNP-Lookup/:mobile_number',
           }
         });
     }else {
-      res.status(422);
+      res.status(200);
+      // res.status(422);
       // invalid mobile number
       let invalidResponse = mnpResponseMapping.errorModel({status: {groupName: "REJECTED"}});
-      res.json(invalidResponse);
+      res.json({status: "error", results: [invalidResponse]});
     }
   });
 
