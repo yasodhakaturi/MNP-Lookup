@@ -243,7 +243,7 @@ router.post('/MNP-Lookup',
         res.status(200);
         _.set(req.processedData, ['error', 'error', 'msisdn'], req.params.mobile_number);
         res.json({
-          status: "Error",
+          status: "Success",
           results: [{
             "mobile_number": req.params.mobile_number,
             "mnp_data": req.processedData.error.error
@@ -288,7 +288,7 @@ router.get('/MNP-Lookup/:mobile_number',
         res.status(200);
         _.set(req.processedData, ['error', 'error', 'msisdn'], req.params.mobile_number);
         res.json({
-          status: "Error",
+          status: "Success",
           results: [{
             "mobile_number": req.params.mobile_number,
             "mnp_data": req.processedData.error.error
@@ -320,7 +320,7 @@ router.get('/MNP-Lookup/:mobile_number',
       // invalid mobile number
       let invalidResponse = mnpResponseMapping.errorModel({status: {groupName: "REJECTED"}});
       res.json({
-        status: "Error",
+        status: "Success",
         results: [{
           "mobile_number": req.params.mobile_number,
           "mnp_data": invalidResponse
