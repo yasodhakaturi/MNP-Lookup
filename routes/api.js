@@ -241,11 +241,13 @@ router.post('/MNP-Lookup',
     }else if(req.processedData.error) {
       if (req.processedData.error.statusCode == 422) {
         res.status(200);
+        _.set(req.processedData, ['error', 'error', 'msisdn'], req.params.mobile_number);
         res.json({
           status: "error",
-          results: {
-            "mnp_data": [req.processedData.error.error]
-          }
+          results: [{
+            "mobile_number": req.params.mobile_number,
+            "mnp_data": req.processedData.error.error
+          }]
         });
       } else {
         res.status(req.processedData.error.statusCode);
@@ -284,11 +286,13 @@ router.get('/MNP-Lookup/:mobile_number',
       if (req.processedData.error.statusCode == 422) {
 
         res.status(200);
+        _.set(req.processedData, ['error', 'error', 'msisdn'], req.params.mobile_number);
         res.json({
           status: "error",
-          results: {
-            "mnp_data": [req.processedData.error.error]
-          }
+          results: [{
+            "mobile_number": req.params.mobile_number,
+            "mnp_data": req.processedData.error.error
+          }]
         });
       } else {
         res.json(req.processedData.error.error);
