@@ -20,8 +20,19 @@ class ResponseSchema{
     this.isroaming = _.get(res, ['roaming'], false);
 
     let isvalid = _.get(res, ['error', 'groupId'], false);
-    this.isvalid = isvalid == 0 ? ((_.get(res, ['status', 'groupName']) == "REJECTED") ? false : true)
-      : (isvalid == 1 ? false : !_.get(res, ['error', 'permanent']));
+    this.isvalid = isvalid == 0
+        ? (
+            (_.get(res, ['status', 'groupName']) == "REJECTED")
+                ? (((_.get(res, ['status', 'description']) == "Network is forbidden"
+                && _.get(res, ['status', 'action']) == "Contact account manager")
+                || !_.get(res, ['error', 'permanent'])) ? true : false)
+                : true
+        )
+        : (
+            isvalid == 1
+                ? false :
+                !_.get(res, ['error', 'permanent'])
+        );
     if (_.get(res, ['status', 'errorMessage'], false)) {
       this.errormessage = _.get(res, ['status', 'errorMessage'])
     }
